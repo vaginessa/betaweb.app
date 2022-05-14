@@ -1,0 +1,28 @@
+<!-- Sidebar -->
+<div class="sidebar">
+
+    <a href="{% url 'app_webapp:home' %}" class="logo">Instadp</a>
+
+    <span class="title">Menu</span>
+    <ul class="menu-list">
+        <li class="item"><a class="link" href="{% url 'app_webapp:home' %}"><i class="icon home"></i>Home</a>
+            <li class="item"><a class="link" href="articles.html"><i class="icon tips"></i>Blog</a>
+                <li class="item"><a class="link" href="contact.html"><i class="icon contact"></i>Contact</a>
+    </ul>
+
+</div>
+
+<div class="prevent-click"></div>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        $('.menu-btn').click(function() {
+            $('body').addClass('sb-toggled');
+            $('.prevent-click').fadeIn();
+        });
+        $('body .prevent-click').click(function() {
+            $('body').removeClass('sb-toggled');
+            $('.prevent-click').fadeOut();
+        });
+    });
+</script>

@@ -1,0 +1,25 @@
+{% load instautils humanize %}
+<div class="user-header {% if instauser.is_verified %}verified{% endif %}">
+    <div class="user">
+        <div class="avatar">
+            <img class="img" src="{{instauser.profile_pic_url|toImage}}">
+        </div>
+        <div class="info">
+            <span class="username">{{instauser.full_name}}
+                {% if instauser.is_verified %}
+                <i class="verified"></i>
+                {% endif %}
+            </span>
+            <span class="text">{{instauser.biography}}</span>
+            <span class="followers">{{instauser.followers|intcomma}} Followers</span>
+        </div>
+    </div>
+</div>
+<div class="results-tabs-instagram">
+    <a class="tab {% if selected == 'profile' %}selected{% endif %}"
+        href="{% url 'app_webapp:dp_downloader' instauser.username %}">Profile</a>
+    <a class="tab stories {% if selected == 'stories' %}selected{% endif %}"
+        href="{% url 'app_webapp:stories_downloader' instauser.username %}">Stories</a>
+    <a class="tab reels {% if selected == 'reels' %}selected{% endif %}"
+        href="{% url 'app_webapp:reels_downloader' instauser.username %}">Reels</a>
+</div>

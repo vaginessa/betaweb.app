@@ -1,0 +1,40 @@
+<!-- Tool Tabs -->
+<ul class="tool-tabs">
+    <li class="tool profile-pictures  {% if selected == 'unfollow' %}selected{% endif %}">
+        <a class="link" title="Download Instagram Videos" href="{% url 'app_webapp:who_unfollowed_index' %}">
+            <i class="icon"></i>
+            <span class="name">Who Unfollowed Me?</span>
+        </a>
+    </li>
+    <li class="tool instagram-photos {% if selected == 'dp' %}selected{% endif %}">
+        <a class="link" title="Download Instagram Profile Pictures" href="{% url 'app_webapp:dp_downloader_index' %}">
+            <i class="icon"></i>
+            <span class="name">Profile Picture</span>
+        </a>
+    </li>
+    <li class="tool instagram-stories {% if selected == 'stories' %}selected{% endif %}">
+        <a class="link" title="Download Instagram Stories" href="{% url 'app_webapp:stories_downloader_index' %}">
+            <i class="icon"></i>
+            <span class="name">Stories</span>
+        </a>
+    </li>
+    <li class="tool instagram-reels  {% if selected == 'reels' %}selected{% endif %}">
+        <a class="link" title="Download Instagram Reels" href="{% url 'app_webapp:reels_downloader_index' %}">
+            <i class="icon"></i>
+            <span class="name">Reels</span>
+        </a>
+    </li>
+    <li class="tool instagram-videos  {% if selected == 'videos' %}selected{% endif %}">
+        <a class="link" title="Download Instagram Videos" href="{% url 'app_webapp:photo_video_downloader_index' %}">
+            <i class="icon"></i>
+            <span class="name">Videos / Photos</span>
+        </a>
+    </li>
+</ul>
+<div class="tool-section {{class}}">
+    <div class="search-bar">
+        <div class="tool-icon"></div>
+        <input class="search-input" placeholder="{{placeholder|default:'Username or Profile Link'}}" required>
+        <input class="search-btn" type="button" value=""></a>
+    </div>
+</div>

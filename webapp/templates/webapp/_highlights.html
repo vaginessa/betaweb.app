@@ -1,0 +1,13 @@
+{% load instautils %}
+{% if highlights %}
+<div class="user-stories message">
+    <div class="story-highlights">
+        {% for highlight in highlights %}
+        <a class="highlight" href="instagram-tools/story-downloader/9gag/highlight:17975228890357424">
+            <img class="thumbnail" src="{{highlight.cropped_thumbnail_url|toBase64}}">
+            <span class="title">{{highlight.title}}</span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,18 @@
+{% extends 'webapp/_base.html' %}
+{% load instautils %}
+{% block content %}
+{% include 'webapp/_common_profile.html' with selected='reels' %}
+<div class="user-reels verified">
+    <div class="reels-list">
+        {% if reels %}
+        {% for reel in reels %}
+            <div class="reel">
+                <a class="link" href="{{reel.video.first.url}}">
+                    <img class="thumbnail" src="{{reel.image.first.url|toImage}}">
+                </a>
+            </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock content %}

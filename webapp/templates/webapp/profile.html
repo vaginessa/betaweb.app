@@ -1,0 +1,33 @@
+{% extends 'webapp/_base.html' %}
+{% load instautils humanize %}
+{% block content %}
+{% include 'webapp/_common_profile.html' with selected='profile' %}
+<div class="user-details">
+    <div class="details">
+        <div class="data">
+            <div class="info"><span class="num">{{instauser.followers|intcomma}}</span><span class="text">Followers</span>
+            </div>
+            <div class="info"><span class="num">{{instauser.following|intcomma}}</span><span class="text">Following</span>
+            </div>
+            <div class="info"><span class="num">{{instauser.posts_count|intcomma}}</span><span class="text">Posts</span></div>
+        </div>
+        <a class="link" href="https://www.instagram.com/{{instauser.username}}" target="_blank">Open on Instagram</a>
+    </div>
+</div>
+<div class="fullsize-profile-picture">
+    {% if instauser.profile_pic_url_hd %}
+    <div class="fullsize">
+        <img src="{{instauser.profile_pic_url_hd|toImage}}" class="img">
+        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url_hd|toImage}}"
+            download="{{instauser.username}}_profile_pic_hd.jpg">Download HD Profile Picture</a>
+    </div>
+    {% endif %}
+    {% if instauser.profile_pic_url %}
+    <div class="fullsize">
+        <img src="{{instauser.profile_pic_url|toImage}}" class="img">
+        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url|toImage}}"
+            download="{{instauser.username}}_profile_pic_normal.jpg">Download Normal Profile Picture</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
