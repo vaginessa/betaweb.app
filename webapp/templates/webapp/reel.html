@@ -1,18 +1,30 @@
 {% extends 'webapp/_base.html' %}
 {% load instautils %}
 {% block content %}
+{% if instauser %}
 {% include 'webapp/_common_profile.html' with selected='reels' %}
-<div class="user-reels verified">
+{% endif %}
+<div class="user-reels {% if reels or reel %}verified{% else %}message{% endif %}">
     <div class="reels-list">
         {% if reels %}
         {% for reel in reels %}
-            <div class="reel">
-                <a class="link" href="{{reel.video.first.url}}">
-                    <img class="thumbnail" src="{{reel.image.first.url|toImage}}">
-                </a>
-            </div>
+        <div class="reel">
+            <a class="link" href="{{reel.video.first.url}}">
+                <img class="thumbnail" src="{{reel.image.first.url|toImage}}">
+            </a>
+        </div>
         {% endfor %}
+        {% elif reel %}
+        <p></p>
+        <div class="reel">
+            <a class="link" href="{{reel.video.first.url}}">
+                <img class="thumbnail" src="{{reel.image.first.url|toImage}}">
+            </a>
+        </div>
         {% endif %}
+    </div>
+    <div class="message">
+        Reel Not Found
     </div>
 </div>
 {% endblock content %}

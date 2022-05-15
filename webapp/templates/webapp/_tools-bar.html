@@ -32,9 +32,12 @@
     </li>
 </ul>
 <div class="tool-section {{class}}">
-    <div class="search-bar">
-        <div class="tool-icon"></div>
-        <input class="search-input" placeholder="{{placeholder|default:'Username or Profile Link'}}" required>
-        <input class="search-btn" type="button" value=""></a>
-    </div>
+    <form method="POST" autocomplete="off">
+        {% csrf_token %}
+        <div class="search-bar">
+            <div class="tool-icon"></div>
+            <input class="search-input" name="{{name|default:'username'}}" placeholder="{{placeholder|default:'Username'}}" required>
+            <input class="search-btn" type="submit" value=""></a>
+        </div>
+    </form>
 </div>

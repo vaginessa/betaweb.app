@@ -5,7 +5,7 @@
             <img class="img" src="{{instauser.profile_pic_url|toImage}}">
         </div>
         <div class="info">
-            <span class="username">{{instauser.full_name}}
+            <span class="username">{{instauser.full_name|default:instauser.username}}
                 {% if instauser.is_verified %}
                 <i class="verified"></i>
                 {% endif %}
@@ -15,11 +15,12 @@
         </div>
     </div>
 </div>
-<div class="results-tabs-instagram">
-    <a class="tab {% if selected == 'profile' %}selected{% endif %}"
-        href="{% url 'app_webapp:dp_downloader' instauser.username %}">Profile</a>
-    <a class="tab stories {% if selected == 'stories' %}selected{% endif %}"
-        href="{% url 'app_webapp:stories_downloader' instauser.username %}">Stories</a>
-    <a class="tab reels {% if selected == 'reels' %}selected{% endif %}"
-        href="{% url 'app_webapp:reels_downloader' instauser.username %}">Reels</a>
-</div>
+<form method="POST" id="tabForm">
+    {% csrf_token %}
+    <input name="username" type="hidden" value="{{instauser.username}}">
+    <div class="results-tabs-instagram">
+        <a class="tab profile {% if selected == 'profile' %}selected{% endif %}" value="{% url 'app_webapp:dp_downloader_index' %}">Profile</a>
+        <a class="tab stories {% if selected == 'stories' %}selected{% endif %}" value="{% url 'app_webapp:stories_downloader_index' %}">Stories</a>
+        <a class="tab reels {% if selected == 'reels' %}selected{% endif %}" value="{% url 'app_webapp:reels_downloader_index' %}">Reels</a>
+    </div>
+</form>

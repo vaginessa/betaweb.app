@@ -18,6 +18,14 @@ def downloadImage(url, filename):
     return filename
 
 
+class ScrapingRecord(models.Model):
+    code = models.CharField(max_length=400, unique=True, db_index=True)
+    scraped_at = models.DateTimeField(default=timezone.now)
+
+    def __str__(self):
+        return self.code
+
+
 class ImageBase64(models.Model):
     url = models.URLField(unique=True, max_length=2200)
     base64 = models.TextField(

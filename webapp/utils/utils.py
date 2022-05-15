@@ -1,20 +1,64 @@
-import base64
-import requests
-import io
-from ..models import User as InstaUser, Story, Image, Video, Post, Location
-from ..instaPrivate.bases.exceptions import StoriesNotFound
+from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord
+from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound
 from ..instaPrivate.instagram import insta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 from django.db.models import Q
 import time
+import re
+
+
+def extractInstaID(url):
+    mo = re.search(
+        r"https?://[\w\-]*\.?instagram.com\/((?P<type>[\w\.\_]+\/(?P<shortcode>[\w\_\-]+))|(?P<username>[\w\.\_]+))\/?",
+        url,
+        re.IGNORECASE
+    )
+    if not mo:
+        return
+    return mo.group("shortcode") or mo.group("username")
+
+
+def get_create_scraping_record(code):
+    return ScrapingRecord.objects.get_or_create(code=code)
+
+
+def update_scraping_record(instance):
+    "need to make it more efficient fails race condition"
+    instance.scraped_at = timezone.now()
+    instance.save()
+    return instance
+
+
+def update_user(instance):
+    user_info = insta.get_user_info(instance.username)
+    instance.insta_id = user_info.id
+    instance.username = user_info.username
+    instance.posts_count = user_info.posts
+    instance.full_name = user_info.full_name
+    instance.profile_pic_url = user_info.profile_pic_url
+    instance.profile_pic_url_hd = user_info.profile_pic_url_hd
+    instance.external_url = user_info.external_url
+    instance.fbid = user_info.fbid
+    instance.biography = user_info.biography
+    instance.followers = user_info.followers
+    instance.following = user_info.follows
+    instance.is_business_account = user_info.is_business_account
+    instance.category_name = user_info.category_name
+    instance.is_private = user_info.is_private
+    instance.is_verified = user_info.is_verified
+    instance.connected_fb_page = user_info.connected_fb_page
+    instance.save()
+    return instance
 
 
 def get_or_create_user(**kwargs):
     username = kwargs["username"]
     try:
         user = InstaUser.objects.get(username=username)
+        if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*4):
+            update_user(user)
     except InstaUser.DoesNotExist:
         user_info = insta.get_user_info(username)
         user = InstaUser.objects.create(
@@ -41,9 +85,12 @@ def get_or_create_user(**kwargs):
 def get_or_create_story(**kwargs):
     username = kwargs["username"]
     user = get_or_create_user(username=username)
-    latest_story = user.story.first()
-    if not latest_story or ((timezone.now() - latest_story.updated_at).total_seconds()) > (60*60*4):
+    scrap_code = f"{username}_stories_all"
+    scraped_record, created = get_create_scraping_record(scrap_code)
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*4):
         try:
+            if not created:
+                update_scraping_record(scraped_record)
             insta_stories = insta.get_stories(username=username).stories
             for insta_storie in insta_stories:
                 with transaction.atomic():
@@ -77,6 +124,8 @@ def get_or_create_story(**kwargs):
                         # ignores unique contraint error
                         pass
         except StoriesNotFound:
+            pass
+        except PrivateAccountException:
             pass
     stories = user.story.filter(expiring_at__gte=time.time())
     return user, stories
@@ -146,12 +195,16 @@ def get_or_create_post(post_info, user):
 
 def get_or_create_user_posts(**kwargs):
     username = kwargs.get("username")
+    scrap_code = f"{username}_posts_all"
     user = get_or_create_user(username=username)
-    latest_post = user.post.first()
-    if not latest_post or ((timezone.now() - latest_post.updated_at).total_seconds()) > (60*60*4):
-        posts = insta.get_posts(username=username)["posts"]
-        for post in posts:
-            get_or_create_post(post, user)
+    scraped_record, created = get_create_scraping_record(scrap_code)
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*4):
+        with transaction.atomic():
+            if not created:
+                update_scraping_record(scraped_record)
+            posts = insta.get_posts(username=username)["posts"]
+            for post in posts:
+                get_or_create_post(post, user)
     if kwargs.get("only_video") == True:
         posts = user.post.filter(Q(media_type=2) | Q(is_unified_video=True))
     else:
@@ -161,12 +214,21 @@ def get_or_create_user_posts(**kwargs):
 
 def get_or_create_post_by_shortcode(**kwargs):
     shortcode = kwargs.get("shortcode")
-    try:
-        post = Post.objects.get(shortcode=shortcode)
-    except Post.DoesNotExist:
-        with transaction.atomic():
-            post_info = insta.get_post_info(shortcode)
+    scrap_code = f"{shortcode}_reel_detail"
+    with transaction.atomic():
+        try:
+            post = Post.objects.get(shortcode=shortcode)
+        except Post.DoesNotExist:
+            scraped_record, created = get_create_scraping_record(scrap_code)
+            if not (created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*8)):
+                return
+            if not created:
+                update_scraping_record(scraped_record)
+            try:
+                post_info = insta.get_post_info(shortcode)
+            except PostNotFound:
+                return
             user_info = post_info.user
             user = get_or_create_user(username=user_info.username)
             post = get_or_create_post(post_info, user)
-    return post
+        return post

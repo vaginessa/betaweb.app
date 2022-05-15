@@ -2,7 +2,7 @@
 {% load instautils %}
 {% block content %}
 {% include 'webapp/_common_profile.html' with selected='stories' %}
-<div class="user-stories verified">
+<div class="user-stories {% if instauser.is_private or not stories %}message{% else %}verified{% endif %}">
     {% if stories %}
     <div class="active-stories">
         {% for story in stories %}
@@ -34,5 +34,14 @@
         {% endfor %}
     </div>
     {% endif %}
+
+    <div class="message">
+        {{instauser.username}}
+        {% if instauser.is_private %}
+        has private account
+        {% elif not stories %}
+        doesnot have any story
+        {% endif %}        
+    </div>
 </div>
 {% endblock content %}

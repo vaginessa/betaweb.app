@@ -1,5 +1,6 @@
 from .insta import (
     User, Location, Post,
     Story, Image, Video,
-    Highlight,ImageBase64
+    Highlight, ImageBase64,
+    ScrapingRecord,
 )
