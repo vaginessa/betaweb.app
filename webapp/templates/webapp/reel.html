@@ -1,9 +1,7 @@
 {% extends 'webapp/_base.html' %}
 {% load instautils %}
 {% block content %}
-{% if instauser %}
 {% include 'webapp/_common_profile.html' with selected='reels' %}
-{% endif %}
 <div class="user-reels {% if reels or reel %}verified{% else %}message{% endif %}">
     <div class="reels-list">
         {% if reels %}

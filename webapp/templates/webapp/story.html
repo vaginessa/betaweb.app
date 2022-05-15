@@ -2,7 +2,7 @@
 {% load instautils %}
 {% block content %}
 {% include 'webapp/_common_profile.html' with selected='stories' %}
-<div class="user-stories {% if instauser.is_private or not stories %}message{% else %}verified{% endif %}">
+<div class="user-stories {% if instauser.is_private or not stories %}{% if not post %}message{% endif %}{% else %}verified{% endif %}">
     {% if stories %}
     <div class="active-stories">
         {% for story in stories %}
@@ -33,14 +33,45 @@
         </div>
         {% endfor %}
     </div>
+    {% elif post %}
+    <div class="active-stories">
+        <div class="story">
+            {% if post.is_video or post.is_unified_video %}
+                {% for video in post.video.all %}
+                    {% if forloop.first %}
+                        <div class="story-post">
+                            <a class="video-link" href="{{video.url}}" target="_blank">
+                                <img class="video-thumbnail" src="{{post.image.first.url|toImage}}">
+                                <div class="play-btn"></div>
+                            </a>
+                        </div>
+                    {% endif %}
+                    <a target="_blank" class="download-btn" href="{{video.url}}">Download {{video.width}} x {{video.height}}</a>
+                {% endfor %}
+            {% else %}
+                {% for image in post.image.all %}
+                    {% if forloop.first %}
+                        <div class="story-post">
+                            <img class="story-image" src="{{image.url|toImage}}">
+                        </div>
+                    {% endif %}
+                    <a target="_blank" class="download-btn" href="{{image.url}}">Download {{image.width}} x {{image.height}}</a>
+                {% endfor %}
+            {% endif %}
+            <div class="timestamp" data-date="{{post.taken_at}}"></div>
+        </div>
+    </div>
     {% endif %}
 
     <div class="message">
-        {{instauser.username}}
         {% if instauser.is_private %}
-        has private account
+        {{instauser.username}} has private account
         {% elif not stories %}
-        doesnot have any story
+        {% if not post %}
+        Post Not Found
+        {% else %}
+        {{instauser.username}} doesnot have any story
+        {% endif %}
         {% endif %}        
     </div>
 </div>

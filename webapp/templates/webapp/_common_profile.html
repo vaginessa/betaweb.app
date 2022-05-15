@@ -1,3 +1,4 @@
+{% if instauser %}
 {% load instautils humanize %}
 <div class="user-header {% if instauser.is_verified %}verified{% endif %}">
     <div class="user">
@@ -24,3 +25,4 @@
         <a class="tab reels {% if selected == 'reels' %}selected{% endif %}" value="{% url 'app_webapp:reels_downloader_index' %}">Reels</a>
     </div>
 </form>
+{% endif %}

@@ -7,7 +7,8 @@ from .utils.utils import (
     get_or_create_story,
     get_or_create_post_by_shortcode,
     get_or_create_user_posts,
-    extractInstaID
+    extractInstaID, 
+    get_or_create_highlight,
 )
 insta.login()
 
@@ -31,7 +32,8 @@ class StoriesDownloaderView(TemplateView):
     def post(self, request):
         username = request.POST.get("username")
         user, stories = get_or_create_story(username=username)
-        return render(request, "webapp/story.html", {"stories": stories, "instauser": user})
+        highlights = get_or_create_highlight(username=username)
+        return render(request, "webapp/story.html", {"stories": stories, "instauser": user,"highlights":highlights})
 
 
 class ReelDetailView(TemplateView):
@@ -41,8 +43,7 @@ class ReelDetailView(TemplateView):
         post = get_or_create_post_by_shortcode(**kwargs)
         if not post:
             return render(request, self.template_name)
-        user = post.user
-        return render(request, self.template_name, {"instauser": user, "reel": post})
+        return render(request, self.template_name, {"instauser": post.user, "reel": post})
 
 
 class ReelsDownloaderView(TemplateView):
@@ -52,23 +53,43 @@ class ReelsDownloaderView(TemplateView):
         post = request.POST
         username = post.get("username")
         shortcode = post.get("shortcode")
+        context = {}
         if not username:
-            shortcode = extractInstaID(shortcode)
-            post = get_or_create_post_by_shortcode(shortcode=shortcode)
-            if post:
-                user = post.user
-                return render(request, "webapp/reel.html", {"instauser": user, "reel": post})
+            try:
+                media_type, shortcode = extractInstaID(shortcode)
+                if media_type == "reel":
+                    post = get_or_create_post_by_shortcode(shortcode=shortcode)
+                    if post:
+                        context = {"instauser": post.user, "reel": post}
+            except TypeError as e:
+                pass
         else:
             user, posts = get_or_create_user_posts(
                 username=username,
                 only_video=True
             )
-            return render(request, "webapp/reel.html", {"instauser": user, "reels": posts[:(posts.count()//3)*3]})
-        return render(request, "webapp/reel.html")
+            context = {"instauser": user,
+                       "reels": posts[:(posts.count()//3)*3]
+                       }
+        return render(request, "webapp/reel.html", context)
 
 
 class PhotoVideoDownloaderView(TemplateView):
     template_name = "webapp/photo-video-downloader.html"
+
+    def post(self, request):
+        post = request.POST
+        shortcode = post.get("shortcode")
+        context = {}
+        try:
+            media_type, shortcode = extractInstaID(shortcode)
+            if media_type == "p":
+                post = get_or_create_post_by_shortcode(shortcode=shortcode)
+                if post:
+                    context = {"post": post}
+        except TypeError:
+            pass
+        return render(request, "webapp/story.html", context)
 
 
 class WhoUnfollowedView(TemplateView):

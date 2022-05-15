@@ -1,5 +1,5 @@
-from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord
-from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound
+from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord, Highlight
+from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound
 from ..instaPrivate.instagram import insta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -11,13 +11,17 @@ import re
 
 def extractInstaID(url):
     mo = re.search(
-        r"https?://[\w\-]*\.?instagram.com\/((?P<type>[\w\.\_]+\/(?P<shortcode>[\w\_\-]+))|(?P<username>[\w\.\_]+))\/?",
+        r"^https?://[\w\-]*\.?instagram.com\/((?P<type>[\w\._]+)\/(?P<shortcode>[\w\_\-]+)|(?P<username>[\w\.\_]+))\/?$",
         url,
         re.IGNORECASE
     )
     if not mo:
         return
-    return mo.group("shortcode") or mo.group("username")
+    shortcode = mo.group("shortcode")
+    if shortcode:
+        media_type = mo.group("type")
+        return media_type, shortcode
+    return mo.group("username")
 
 
 def get_create_scraping_record(code):
@@ -31,34 +35,10 @@ def update_scraping_record(instance):
     return instance
 
 
-def update_user(instance):
-    user_info = insta.get_user_info(instance.username)
-    instance.insta_id = user_info.id
-    instance.username = user_info.username
-    instance.posts_count = user_info.posts
-    instance.full_name = user_info.full_name
-    instance.profile_pic_url = user_info.profile_pic_url
-    instance.profile_pic_url_hd = user_info.profile_pic_url_hd
-    instance.external_url = user_info.external_url
-    instance.fbid = user_info.fbid
-    instance.biography = user_info.biography
-    instance.followers = user_info.followers
-    instance.following = user_info.follows
-    instance.is_business_account = user_info.is_business_account
-    instance.category_name = user_info.category_name
-    instance.is_private = user_info.is_private
-    instance.is_verified = user_info.is_verified
-    instance.connected_fb_page = user_info.connected_fb_page
-    instance.save()
-    return instance
-
-
 def get_or_create_user(**kwargs):
     username = kwargs["username"]
     try:
         user = InstaUser.objects.get(username=username)
-        if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*4):
-            update_user(user)
     except InstaUser.DoesNotExist:
         user_info = insta.get_user_info(username)
         user = InstaUser.objects.create(
@@ -87,7 +67,7 @@ def get_or_create_story(**kwargs):
     user = get_or_create_user(username=username)
     scrap_code = f"{username}_stories_all"
     scraped_record, created = get_create_scraping_record(scrap_code)
-    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*4):
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*12):
         try:
             if not created:
                 update_scraping_record(scraped_record)
@@ -146,7 +126,7 @@ def get_or_create_location(location_obj):
     return loc
 
 
-def get_or_create_post(post_info, user):
+def create_post(post_info, user):
     try:
         loc = get_or_create_location(post_info.location)
         post = Post.objects.create(
@@ -188,9 +168,9 @@ def get_or_create_post(post_info, user):
                     video_duration=video.video_duration,
                     view_count=video.view_count
                 )
+        return post
     except IntegrityError as e:
         return
-    return post
 
 
 def get_or_create_user_posts(**kwargs):
@@ -198,13 +178,13 @@ def get_or_create_user_posts(**kwargs):
     scrap_code = f"{username}_posts_all"
     user = get_or_create_user(username=username)
     scraped_record, created = get_create_scraping_record(scrap_code)
-    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*4):
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
         with transaction.atomic():
             if not created:
                 update_scraping_record(scraped_record)
             posts = insta.get_posts(username=username)["posts"]
             for post in posts:
-                get_or_create_post(post, user)
+                create_post(post, user)
     if kwargs.get("only_video") == True:
         posts = user.post.filter(Q(media_type=2) | Q(is_unified_video=True))
     else:
@@ -220,7 +200,7 @@ def get_or_create_post_by_shortcode(**kwargs):
             post = Post.objects.get(shortcode=shortcode)
         except Post.DoesNotExist:
             scraped_record, created = get_create_scraping_record(scrap_code)
-            if not (created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*8)):
+            if not (created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24)):
                 return
             if not created:
                 update_scraping_record(scraped_record)
@@ -230,5 +210,38 @@ def get_or_create_post_by_shortcode(**kwargs):
                 return
             user_info = post_info.user
             user = get_or_create_user(username=user_info.username)
-            post = get_or_create_post(post_info, user)
+            post = create_post(post_info, user)
         return post
+
+
+def create_highlight(highlight_info, user):
+    try:
+        return Highlight.objects.create(
+            user=user,
+            insta_id=highlight_info.id,
+            thumbnail_url=highlight_info.thumbnail_url,
+            cropped_thumbnail_url=highlight_info.cropped_thumbnail_url,
+            title=highlight_info.title,
+        )
+    except IntegrityError as e:
+        return
+
+
+def get_or_create_highlight(**kwargs):
+    username = kwargs["username"]
+    scrap_code = f"{username}_highlights_all"
+    user = get_or_create_user(username=username)
+    scraped_record, created = get_create_scraping_record(scrap_code)
+    with transaction.atomic():
+        if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
+            if not created:
+                update_scraping_record(scraped_record)
+            try:
+                highlights = insta.get_highlights(username=username)
+                for highlight in highlights:
+                    create_highlight(highlight,user)
+            except HighlightNotFound:
+                return 
+            except PrivateAccountException:
+                return 
+    return user.highlight.all()

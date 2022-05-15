@@ -6,6 +6,57 @@ from urllib.parse import urlparse
 import requests
 from django.conf import settings
 from base64 import b64encode
+from ..instaPrivate.instagram import insta
+
+
+def update_video(parent_instance, video_info):
+    try:
+        video = parent_instance.video.get(
+            height=video_info.height,
+            width=video_info.width
+        )
+        video.url = video_info.url
+        video.view_count = video_info.view_count
+        video.save()
+        return video
+    except Video.DoesNotExist:
+        pass
+
+
+def update_post(instance):
+    post_info = insta.get_post_info(instance.shortcode)
+    instance.comments_count = post_info.comments
+    instance.likes_count = post_info.likes
+    instance.caption_is_edited = post_info.caption_is_edited
+    instance.comment_likes_enabled = post_info.comment_likes_enabled
+    instance.caption = post_info.caption
+    if post_info.is_unified_video or post_info.media_type == 2:
+        for video in post_info.videos:
+            update_video(instance, video)
+    instance.save()
+    return instance
+
+
+def update_user(instance):
+    user_info = insta.get_user_info(instance.username)
+    instance.insta_id = user_info.id
+    instance.username = user_info.username
+    instance.posts_count = user_info.posts
+    instance.full_name = user_info.full_name
+    instance.profile_pic_url = user_info.profile_pic_url
+    instance.profile_pic_url_hd = user_info.profile_pic_url_hd
+    instance.external_url = user_info.external_url
+    instance.fbid = user_info.fbid
+    instance.biography = user_info.biography
+    instance.followers = user_info.followers
+    instance.following = user_info.follows
+    instance.is_business_account = user_info.is_business_account
+    instance.category_name = user_info.category_name
+    instance.is_private = user_info.is_private
+    instance.is_verified = user_info.is_verified
+    instance.connected_fb_page = user_info.connected_fb_page
+    instance.save()
+    return instance
 
 
 def downloadImage(url, filename):
@@ -57,6 +108,10 @@ class ImageBase64(models.Model):
 
 
 class User(models.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if ((timezone.now() - self.updated_at).total_seconds()) >= (60*60*24):
+            update_user(self)
     insta_id = models.CharField(max_length=30, unique=True, db_index=True)
     username = models.CharField(max_length=30, unique=True, db_index=True)
     posts_count = models.PositiveIntegerField(blank=True, null=True)
@@ -136,6 +191,10 @@ class Location(models.Model):
 
 
 class Post(models.Model):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if ((timezone.now() - self.updated_at).total_seconds()) > (60*60*8):
+            update_post(self)
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -269,7 +328,7 @@ class Highlight(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="highlist",
+        related_name="highlight",
         related_query_name="has_highlight"
     )
     insta_id = models.CharField(max_length=30, db_index=True, unique=True)
