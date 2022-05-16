@@ -107,18 +107,69 @@ class ImageBase64(models.Model):
         verbose_name_plural = "ImagesB64"
 
 
+class FollowUnfollowABC(models.Model):
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    def save(self, *args, **kwargs):
+        if self.id:
+            self.updated_at = timezone.now()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class FollowerRelation(FollowUnfollowABC):
+    to_person = models.ForeignKey(
+        "User", on_delete=models.PROTECT, related_name="follow_to_person")
+    from_person = models.ForeignKey(
+        "User", on_delete=models.PROTECT, related_name="follow_from_person")
+
+    def __str__(self):
+        return f"{self.from_person} followed {self.to_person}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['to_person', 'from_person'], name='follow_rel_unique'),
+        ]
+
+
+class UnfollowerRelation(FollowUnfollowABC):
+    to_person = models.ForeignKey(
+        "User", on_delete=models.PROTECT, related_name="unfollow_to_person")
+    from_person = models.ForeignKey(
+        "User", on_delete=models.PROTECT, related_name="unfollow_from_person")
+
+    def __str__(self):
+        return f"{self.from_person} unfollowed {self.to_person}"
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['to_person', 'from_person'], name='unfollow_rel_unique'),
+        ]
+
+
 class User(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        print("hi")
         if ((timezone.now() - self.updated_at).total_seconds()) >= (60*60*24):
             update_user(self)
+    follower = models.ManyToManyField(
+        "self", symmetrical=False, through="FollowerRelation", related_name="follows")
+    unfollower = models.ManyToManyField(
+        "self", symmetrical=False, through="UnfollowerRelation", related_name="unfollows")
     insta_id = models.CharField(max_length=30, unique=True, db_index=True)
     username = models.CharField(max_length=30, unique=True, db_index=True)
     posts_count = models.PositiveIntegerField(blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)
-    profile_pic_url = models.URLField(blank=True, null=True)
-    profile_pic_url_hd = models.URLField(blank=True, null=True)
-    external_url = models.URLField(blank=True, null=True)
+    profile_pic_url = models.URLField(max_length=2083, blank=True, null=True)
+    profile_pic_url_hd = models.URLField(
+        max_length=2083, blank=True, null=True)
+    external_url = models.URLField(max_length=2083, blank=True, null=True)
     fbid = models.CharField(max_length=30, blank=True, null=True, unique=True)
     biography = models.CharField(blank=True, null=True, max_length=200)
     followers = models.PositiveIntegerField(blank=True, null=True)
@@ -135,26 +186,26 @@ class User(models.Model):
     def __str__(self):
         return self.username
 
-    def __repr__(self):
-        return "User(\
-            insta_id='{self.insta_id}',\
-            username='{self.username}',\
-            total_posts={self.total_posts},\
-            full_name='{self.full_name}',\
-            profile_pic_url='{self.profile_pic_url}',\
-            profile_pic_url_hd='{self.profile_pic_url_hd}',\
-            external_url='{self.external_url}',\
-            fbid='{self.fbid}',\
-            biography='{self.biography}',\
-            followers={self.followers},\
-            following={self.following},\
-            is_business_account={self.is_business_account},\
-            is_professional_account={self.is_professional_account},\
-            category_name='{self.category_name}',\
-            is_private={self.is_private},\
-            is_verified={self.is_verified},\
-            connected_fb_page='{self.connected_fb_page}',\
-            )".format(self=self)
+    # def __repr__(self):
+    #     return "User(\
+    #         insta_id='{self.insta_id}',\
+    #         username='{self.username}',\
+    #         total_posts={self.total_posts},\
+    #         full_name='{self.full_name}',\
+    #         profile_pic_url='{self.profile_pic_url}',\
+    #         profile_pic_url_hd='{self.profile_pic_url_hd}',\
+    #         external_url='{self.external_url}',\
+    #         fbid='{self.fbid}',\
+    #         biography='{self.biography}',\
+    #         followers={self.followers},\
+    #         following={self.following},\
+    #         is_business_account={self.is_business_account},\
+    #         is_professional_account={self.is_professional_account},\
+    #         category_name='{self.category_name}',\
+    #         is_private={self.is_private},\
+    #         is_verified={self.is_verified},\
+    #         connected_fb_page='{self.connected_fb_page}',\
+    #         )".format(self=self)
 
     def save(self, *args, **kwargs):
         if self.id:
@@ -332,8 +383,8 @@ class Highlight(models.Model):
         related_query_name="has_highlight"
     )
     insta_id = models.CharField(max_length=30, db_index=True, unique=True)
-    thumbnail_url = models.URLField()
-    cropped_thumbnail_url = models.URLField()
+    thumbnail_url = models.URLField(max_length=2083)
+    cropped_thumbnail_url = models.URLField(max_length=2083)
     title = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(editable=False, default=timezone.now)
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
@@ -345,3 +396,4 @@ class Highlight(models.Model):
 
     def __str__(self):
         return self.insta_id
+# class

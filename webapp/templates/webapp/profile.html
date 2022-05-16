@@ -18,15 +18,13 @@
     {% if instauser.profile_pic_url_hd %}
     <div class="fullsize">
         <img src="{{instauser.profile_pic_url_hd|toImage}}" class="img">
-        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url_hd|toImage}}"
-            download="{{instauser.username}}_profile_pic_hd.jpg">Download HD Profile Picture</a>
+        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url_hd|toImage}}" download>Download HD Profile Picture</a>
     </div>
     {% endif %}
     {% if instauser.profile_pic_url %}
     <div class="fullsize">
         <img src="{{instauser.profile_pic_url|toImage}}" class="img">
-        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url|toImage}}"
-            download="{{instauser.username}}_profile_pic_normal.jpg">Download Normal Profile Picture</a>
+        <a target="_blank" class="download-btn" href="{{instauser.profile_pic_url|toImage}}" download>Download Normal Profile Picture</a>
     </div>
     {% endif %}
 </div>

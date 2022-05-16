@@ -3,4 +3,6 @@ from .insta import (
     Story, Image, Video,
     Highlight, ImageBase64,
     ScrapingRecord,
+    FollowerRelation,
+    UnfollowerRelation
 )

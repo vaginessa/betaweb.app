@@ -2,6 +2,7 @@
 {% load instautils %}
 {% block content %}
 {% include 'webapp/_common_profile.html' with selected='stories' %}
+{% include 'webapp/_highlights.html' %}
 <div class="user-stories {% if instauser.is_private or not stories %}{% if not post %}message{% endif %}{% else %}verified{% endif %}">
     {% if stories %}
     <div class="active-stories">
@@ -26,7 +27,7 @@
                             <img class="story-image" src="{{image.url|toImage}}">
                         </div>
                     {% endif %}
-                    <a target="_blank" class="download-btn" href="{{image.url}}">Download {{image.width}} x {{image.height}}</a>
+                    <a target="_blank" class="download-btn" href="{{image.url|toImage}}" download>Download {{image.width}} x {{image.height}}</a>
                 {% endfor %}
             {% endif %}
             <div class="timestamp" data-date="{{story.taken_at}}"></div>

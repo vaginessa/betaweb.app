@@ -1,13 +1,16 @@
 from django.views.generic import TemplateView
 from django.shortcuts import render
+from .models import User, FollowerRelation, UnfollowerRelation
 from .instaPrivate.instagram import insta
+from django.db import IntegrityError, transaction
+from django.db.models import Q
 from .utils.utils import (
     get_or_create_post_by_shortcode,
     get_or_create_user,
     get_or_create_story,
     get_or_create_post_by_shortcode,
     get_or_create_user_posts,
-    extractInstaID, 
+    extractInstaID,
     get_or_create_highlight,
 )
 insta.login()
@@ -33,7 +36,7 @@ class StoriesDownloaderView(TemplateView):
         username = request.POST.get("username")
         user, stories = get_or_create_story(username=username)
         highlights = get_or_create_highlight(username=username)
-        return render(request, "webapp/story.html", {"stories": stories, "instauser": user,"highlights":highlights})
+        return render(request, "webapp/story.html", {"stories": stories, "instauser": user, "highlights": highlights})
 
 
 class ReelDetailView(TemplateView):
@@ -94,3 +97,47 @@ class PhotoVideoDownloaderView(TemplateView):
 
 class WhoUnfollowedView(TemplateView):
     template_name = "webapp/who-unfollowed.html"
+
+    def post(self, request):
+        username = request.POST.get("username")
+        to_person = get_or_create_user(username=username)
+        followers = {
+            follower.username: follower for follower in insta.get_followers(username)
+        }
+        realtime_followers_usernames = set(followers.keys())
+        old_followers_usernames = set(
+            to_person.follower.values_list("username", flat=True)
+        )
+        unfollowers_usernames = old_followers_usernames.difference(
+            realtime_followers_usernames)
+        new_followers_usernames = realtime_followers_usernames.difference(
+            old_followers_usernames)
+        with transaction.atomic():
+            if new_followers_usernames:
+                UnfollowerRelation.objects.filter(
+                    to_person=to_person,
+                    from_person__username__in=new_followers_usernames
+                ).delete()
+                for follower_username in new_followers_usernames:
+                    follower = followers[follower_username]
+                    from_person, created = User.objects.get_or_create(
+                        insta_id=follower.id,
+                        username=follower.username,
+                        defaults={
+                            "full_name": follower.full_name,
+                            "profile_pic_url": follower.profile_pic_url,
+                            "is_private": follower.is_private,
+                            "is_verified": follower.is_verified,
+                        }
+                    )
+                    to_person.follower.add(from_person)
+            if unfollowers_usernames:
+                from_persons = User.objects.filter(username__in=unfollowers_usernames).order_by(
+                    "id").values_list("id", flat=True)
+                to_person.unfollower.add(*from_persons)
+                FollowerRelation.objects.filter(
+                    to_person=to_person,
+                    from_person__username__in=unfollowers_usernames
+                ).delete()
+            unfollowers = to_person.unfollower.values()
+            return render(request, self.template_name, {"unfollowers": unfollowers,"instauser":to_person})
