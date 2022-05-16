@@ -7,6 +7,7 @@ import requests
 from django.conf import settings
 from base64 import b64encode
 from ..instaPrivate.instagram import insta
+from PIL import ImageFile
 
 
 def update_video(parent_instance, video_info):
@@ -60,12 +61,23 @@ def update_user(instance):
 
 
 def downloadImage(url, filename):
-    with requests.get(url, stream=True) as r:
-        assert r.headers["content-type"].split("/")[0] == "image"
-        r.raise_for_status()
-        with open(settings.MEDIA_ROOT/filename, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1024*2):
-                f.write(chunk)
+    filepath = settings.MEDIA_ROOT/filename
+    with ImageFile.Parser() as p:
+        with requests.get(url, stream=True) as r:
+            assert r.headers["content-type"].split("/")[0] == "image"
+            r.raise_for_status()
+            with open(filepath, "wb+") as f:
+                for chunk in r.iter_content(chunk_size=1024*2):
+                    f.write(chunk)
+                f.seek(0)
+                p.feed(f.read())
+            if p.image:
+                width, height = p.image.size
+                path = Path(settings.MEDIA_ROOT/filename)
+                filename = f"{path.stem}{width}x{height}{path.suffix}"
+                path.rename(
+                    settings.MEDIA_ROOT / filename
+                )
     return filename
 
 
@@ -155,7 +167,6 @@ class UnfollowerRelation(FollowUnfollowABC):
 class User(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        print("hi")
         if ((timezone.now() - self.updated_at).total_seconds()) >= (60*60*24):
             update_user(self)
     follower = models.ManyToManyField(

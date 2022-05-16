@@ -2,7 +2,7 @@
 {% load instautils %}
 {% block content %}
 {% include 'webapp/_common_profile.html' with selected='reels' %}
-<div class="user-reels {% if not instauser.is_private or reels or reel %}verified{% else %}message{% endif %}">
+<div class="user-reels {% if instauser.is_private %}message{% else %}{% if reel or reels %}verified{% else %}message{% endif %}{% endif %}">
     <div class="reels-list">
         {% if reels %}
         {% for reel in reels %}

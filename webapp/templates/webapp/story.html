@@ -56,7 +56,7 @@
                             <img class="story-image" src="{{image.url|toImage}}">
                         </div>
                     {% endif %}
-                    <a target="_blank" class="download-btn" href="{{image.url}}">Download {{image.width}} x {{image.height}}</a>
+                    <a target="_blank" class="download-btn" href="{{image.url|toImage}}" download="">Download {{image.width}} x {{image.height}}</a>
                 {% endfor %}
             {% endif %}
             <div class="timestamp" data-date="{{post.taken_at}}"></div>

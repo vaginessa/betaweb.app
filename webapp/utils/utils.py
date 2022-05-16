@@ -1,5 +1,5 @@
-from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord, Highlight
-from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound
+from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord, Highlight, FollowerRelation, UnfollowerRelation
+from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound, UserNotFound
 from ..instaPrivate.instagram import insta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -40,25 +40,32 @@ def get_or_create_user(**kwargs):
     try:
         user = InstaUser.objects.get(username=username)
     except InstaUser.DoesNotExist:
-        user_info = insta.get_user_info(username)
-        user = InstaUser.objects.create(
-            insta_id=user_info.id,
-            username=user_info.username,
-            posts_count=user_info.posts,
-            full_name=user_info.full_name,
-            profile_pic_url=user_info.profile_pic_url,
-            profile_pic_url_hd=user_info.profile_pic_url_hd,
-            external_url=user_info.external_url,
-            fbid=user_info.fbid,
-            biography=user_info.biography,
-            followers=user_info.followers,
-            following=user_info.follows,
-            is_business_account=user_info.is_business_account,
-            category_name=user_info.category_name,
-            is_private=user_info.is_private,
-            is_verified=user_info.is_verified,
-            connected_fb_page=user_info.connected_fb_page
-        )
+        scrap_code = f"{username}"
+        scraped_record, created = get_create_scraping_record(scrap_code)
+        if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24):
+            if not created:
+                update_scraping_record(scraped_record)
+            user_info = insta.get_user_info(username)
+            user = InstaUser.objects.create(
+                insta_id=user_info.id,
+                username=user_info.username,
+                posts_count=user_info.posts,
+                full_name=user_info.full_name,
+                profile_pic_url=user_info.profile_pic_url,
+                profile_pic_url_hd=user_info.profile_pic_url_hd,
+                external_url=user_info.external_url,
+                fbid=user_info.fbid,
+                biography=user_info.biography,
+                followers=user_info.followers,
+                following=user_info.follows,
+                is_business_account=user_info.is_business_account,
+                category_name=user_info.category_name,
+                is_private=user_info.is_private,
+                is_verified=user_info.is_verified,
+                connected_fb_page=user_info.connected_fb_page
+            )
+        else:
+            raise UserNotFound
     return user
 
 
@@ -239,9 +246,58 @@ def get_or_create_highlight(**kwargs):
             try:
                 highlights = insta.get_highlights(username=username)
                 for highlight in highlights:
-                    create_highlight(highlight,user)
+                    create_highlight(highlight, user)
             except HighlightNotFound:
-                return 
+                return
             except PrivateAccountException:
-                return 
+                return
     return user.highlight.all()
+
+
+def who_unfollowed(username):
+    to_person = get_or_create_user(username=username)
+    scrap_code = f"{username}_who_unfollowed"
+    scraped_record, created = get_create_scraping_record(scrap_code)
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
+        if not created:
+            update_scraping_record(scraped_record)
+        followers = {
+            follower.username: follower for follower in insta.get_followers(username)
+        }
+        realtime_followers_usernames = set(followers.keys())
+        old_followers_usernames = set(
+            to_person.follower.values_list("username", flat=True)
+        )
+        unfollowers_usernames = old_followers_usernames.difference(
+            realtime_followers_usernames)
+        new_followers_usernames = realtime_followers_usernames.difference(
+            old_followers_usernames)
+        with transaction.atomic():
+            if new_followers_usernames:
+                UnfollowerRelation.objects.filter(
+                    to_person=to_person,
+                    from_person__username__in=new_followers_usernames
+                ).delete()
+                for follower_username in new_followers_usernames:
+                    follower = followers[follower_username]
+                    from_person, created = InstaUser.objects.get_or_create(
+                        insta_id=follower.id,
+                        username=follower.username,
+                        defaults={
+                            "full_name": follower.full_name,
+                            "profile_pic_url": follower.profile_pic_url,
+                            "is_private": follower.is_private,
+                            "is_verified": follower.is_verified,
+                        }
+                    )
+                    to_person.follower.add(from_person)
+            if unfollowers_usernames:
+                from_persons = InstaUser.objects.filter(username__in=unfollowers_usernames)\
+                    .order_by("id").values_list("id", flat=True)
+                to_person.unfollower.add(*from_persons)
+                FollowerRelation.objects.filter(
+                    to_person=to_person,
+                    from_person__username__in=unfollowers_usernames
+                ).delete()
+    unfollowers = to_person.unfollower.values()
+    return to_person, unfollowers

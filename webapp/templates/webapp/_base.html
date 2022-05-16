@@ -5,7 +5,8 @@
 <head>
     <meta charset="utf-8">
     <title>Instadp - View Insta dp at full size - Instagram profile picture downloader</title>
-    <meta name="description" content="View anyone's Instadp for free in full size. Instagram profile picture viewer lets you zoom in on any Insta dp in original size.">
+    <meta name="description"
+        content="View anyone's Instadp for free in full size. Instagram profile picture viewer lets you zoom in on any Insta dp in original size.">
     <base>
 
     <meta name="viewport" content="width=device-width, user-scalable=no">
@@ -24,7 +25,7 @@
 </head>
 
 
-<body >
+<body>
 
     <div class="nav-skeleton"></div>
 
@@ -36,7 +37,7 @@
     </header>
 
     <script type="text/javascript">
-        $(document).ready(function() {
+        $(document).ready(function () {
             function sticktothetop() {
                 var window_top = $(window).scrollTop();
                 var top = $('.nav-skeleton').offset().top;
@@ -48,7 +49,7 @@
                     $('.nav-skeleton').height(1);
                 }
             }
-            $(function() {
+            $(function () {
                 $(window).scroll(sticktothetop);
                 sticktothetop();
             });
@@ -58,8 +59,8 @@
     <!-- Content -->
     <div class="page">
         <div class="centered">
-            {% block content %} {% endblock content %} {% include 'webapp/_faq.html' %}
-        </div>
+        {% block content %} {% endblock content %} {% include 'webapp/_faq.html' %}
+    </div>
     </div>
 
 
