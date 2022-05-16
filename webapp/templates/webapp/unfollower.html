@@ -1,0 +1,29 @@
+{% extends 'webapp/_base.html' %}
+{% load instautils humanize %}
+{% block content %}
+{% include 'webapp/_common_profile.html' %}
+{% for unfollower in unfollowers %}
+<div class="col-12 col-sm-6 col-md-4 col-lg-3">
+    <div class="our-team">
+        <div class="picture">
+            <img class="img-fluid" src="{{unfollower.profile_pic_url|toImage}}">
+        </div>
+        <div class="team-content">
+            <h3 class="name">{{unfollower.full_name|default:unfollower.username}}</h3>
+            {% if unfollower.biography %}
+            <h4 class="title">{{unfollower.biography}}</h4>
+            {% endif %}
+            {% if unfollower.followers %}
+            <h3 class="name">{{unfollower.followers|intcomma}} followers</h3>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="user-stories message">
+    <div class="message">
+        Sorry, we currently don't have data for {{instauser.username}}. Come Back Later
+    </div>
+</div>
+{% endfor %}
+{% endblock content %}
