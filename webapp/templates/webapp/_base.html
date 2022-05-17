@@ -4,22 +4,21 @@
 
 <head>
     <meta charset="utf-8">
-    <title>Instadp - View Insta dp at full size - Instagram profile picture downloader</title>
+    <title>{{title}}{% block title %}{% endblock title %}</title>
     <meta name="description"
-        content="View anyone's Instadp for free in full size. Instagram profile picture viewer lets you zoom in on any Insta dp in original size.">
+        content="{% block description %}{{description}}{% endblock description %}">
     <base>
 
     <meta name="viewport" content="width=device-width, user-scalable=no">
-    <meta property="og:image" content="images/facebook-share.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="images/favicon/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/favicon/favicon-16x16.png">
+    <meta property="og:image" content="{{share_image.url}}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{favicon_apple.url}}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{favicon_32x32.url}}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{favicon_16x16.url}}">
     <link rel="manifest" href="images/favicon/site.html">
     <meta name="msapplication-TileColor" content="#FFFFFF">
     <meta name="theme-color" content="#FFFFFF">
     <meta name="msapplication-navbutton-color" content="#FFFFFF">
     <meta name="apple-mobile-web-app-status-bar-style" content="#FFFFFF">
-    <meta name="apple-itunes-app" content="app-id=651309421">
     <link rel="stylesheet" href="{% static 'webapp/styles/styles.css' %}">
     <script src="{% static 'webapp/scripts/jquery.js' %}"></script>
 </head>
@@ -31,7 +30,7 @@
 
     <header class="nav">
         <div class="centered">
-            <a class="logo-btn" href="{% url 'app_webapp:home' %}">Instadp</a>
+            <a class="logo-btn" href="{% url 'app_webapp:home' %}">{{title}}</a>
             <div class="menu-btn"></div>
         </div>
     </header>

@@ -6,6 +6,20 @@ from .models import (
     ImageBase64,
     ScrapingRecord,
     FollowerRelation,
-    UnfollowerRelation
+    UnfollowerRelation,
+    Config
 )
-admin.site.register([User, Location, Post, Story, Image, Video, Highlight,ImageBase64,ScrapingRecord,FollowerRelation])
+admin.site.register([
+    User, 
+    Location, 
+    Post, 
+    Story, 
+    Image, 
+    Video, 
+    Highlight, 
+    ImageBase64, 
+    ScrapingRecord, 
+    FollowerRelation, 
+    UnfollowerRelation,
+    Config
+])

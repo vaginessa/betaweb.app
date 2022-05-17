@@ -2,14 +2,28 @@
 <footer class="footer">
     <div class="centered">
         <div class="section-1">
-            <a class="logo" href="index.html">Instadp</a>
-            <div class="links"><a href="contact.html">Contact</a></div>
+            <a class="logo" href="{% url 'app_webapp:home' %}">{{title}}</a>
+            <div class="links"><a href="{% url 'app_webapp:contact' %}">Contact</a></div>
         </div>
         <div class="section-2">
             <div class="links">
-                <a href="instagram-tools.html">Instagram Downloader</a>
+                <a href="{% url 'app_webapp:who_unfollowed_index' %}">Who Unfollowed Me On Instagram?</a> |
+                <a href="{% url 'app_webapp:dp_downloader_index' %}">Instagram DP Downloader</a> |
+                <a href="{% url 'app_webapp:stories_downloader_index' %}">Instagram Story Downloader</a> |
+                <a href="{% url 'app_webapp:dp_downloader_index' %}">Instagram Profile Picture Downloader</a> |
+                <a href="{% url 'app_webapp:stories_downloader_index' %}">Download Instagram Highlight</a> |
+                <a href="{% url 'app_webapp:reels_downloader_index' %}">Instagram Reel Downloader</a> |
+                <a href="{% url 'app_webapp:photo_video_downloader_index' %}">Instagram Photo Downloader</a> |
+                <a href="{% url 'app_webapp:photo_video_downloader_index' %}">Instagram Video Downloader</a> |
+                <a href="{% url 'app_webapp:stories_downloader_index' %}">Download Instagram Stories</a> |
+                <a href="{% url 'app_webapp:reels_downloader_index' %}">Download Instagram Reels</a>
             </div>
-            <div class="disclaimer">Instadp is not affiliated with Instagram&trade;<br>We do not host any Instagram content.
+            <div class="disclaimer">
+                {% if not disclaimer %}
+                {{title}} is not affiliated with Instagram&trade;<br>We do not host any Instagram content.
+                {% else %}
+                {{disclaimer}}
+                {% endif %}
             </div>
         </div>
     </div>

@@ -11,5 +11,6 @@ sub_urlpatterns = [
 ]
 urlpatterns = [
     path("",views.HomeView.as_view(),name="home"),
+    path("contact/",views.ContactView.as_view(),name="contact"),
     path("instatools/",include(sub_urlpatterns),)
 ]

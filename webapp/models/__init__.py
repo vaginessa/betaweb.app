@@ -6,3 +6,4 @@ from .insta import (
     FollowerRelation,
     UnfollowerRelation
 )
+from .config import Config

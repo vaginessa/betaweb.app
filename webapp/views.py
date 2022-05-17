@@ -99,5 +99,9 @@ class WhoUnfollowedView(TemplateView):
 
     def post(self, request):
         username = request.POST.get("username")
-        to_person,unfollowers = who_unfollowed(username)
-        return render(request, 'webapp/unfollower.html', {"unfollowers": unfollowers,"instauser":to_person})
+        to_person, unfollowers = who_unfollowed(username)
+        return render(request, 'webapp/unfollower.html', {"unfollowers": unfollowers, "instauser": to_person})
+
+
+class ContactView(TemplateView):
+    template_name = 'webapp/contact.html'
