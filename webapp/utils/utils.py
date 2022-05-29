@@ -1,5 +1,6 @@
-from ..models import User as InstaUser, Story, Image, Video, Post, Location, ScrapingRecord, Highlight, FollowerRelation, UnfollowerRelation
-from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound, UserNotFound
+from ..models import User as InstaUser, CarouselMedia, Story, \
+    Image, Video, Post, Location, ScrapingRecord, Highlight, FollowerRelation, UnfollowerRelation, update_user
+from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound, UserNotFound, F2KException
 from ..instaPrivate.instagram import insta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
@@ -7,6 +8,21 @@ from django.utils import timezone
 from django.db.models import Q
 import time
 import re
+
+
+def isinstaurl(url):
+    mo = re.search(r"^https?://[\w\-]*\.?instagram.com", url, re.IGNORECASE)
+    return True if mo else False
+
+
+def getUsername(username):
+    if isinstaurl(username):
+        parsed = extractInstaID(username)
+        if isinstance(parsed, tuple):
+            raise UserNotFound
+        else:
+            username = parsed
+    return username
 
 
 def extractInstaID(url):
@@ -39,12 +55,14 @@ def get_or_create_user(**kwargs):
     username = kwargs["username"]
     try:
         user = InstaUser.objects.get(username=username)
+        if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*24):
+            update_user(user)
     except InstaUser.DoesNotExist:
         scrap_code = f"{username}"
         scraped_record, created = get_create_scraping_record(scrap_code)
+        if not created:
+            update_scraping_record(scraped_record)
         if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24):
-            if not created:
-                update_scraping_record(scraped_record)
             user_info = insta.get_user_info(username)
             user = InstaUser.objects.create(
                 insta_id=user_info.id,
@@ -157,16 +175,38 @@ def create_post(post_info, user):
             product_type=post_info.product_type,
             caption=post_info.caption,
         )
-        for image in post_info.images:
-            Image.objects.create(
-                width=image.width,
-                height=image.height,
-                url=image.url,
-                post=post
-            )
+        if post_info.media_type == 8:
+            images = []
+            for cm in post_info.carousel_media:
+                cm_ins = CarouselMedia.objects.create(
+                    insta_id=cm.id,
+                    media_type=cm.media_type,
+                    original_width=cm.original_width,
+                    original_height=cm.original_height,
+                    post=post
+                )
+                for image in cm.images:
+                    images.append(Image(
+                        width=image.width,
+                        height=image.height,
+                        url=image.url,
+                        cm=cm_ins
+                    ))
+            Image.objects.bulk_create(images)
+        else:
+            images = []
+            for image in post_info.images:
+                images.append(Image(
+                    width=image.width,
+                    height=image.height,
+                    url=image.url,
+                    post=post
+                ))
+            Image.objects.bulk_create(images)
         if post_info.is_unified_video or post_info.media_type == 2:
+            videos = []
             for video in post_info.videos:
-                Video.objects.create(
+                videos.append(Video(
                     post=post,
                     width=video.width,
                     height=video.height,
@@ -174,7 +214,8 @@ def create_post(post_info, user):
                     has_audio=video.has_audio,
                     video_duration=video.video_duration,
                     view_count=video.view_count
-                )
+                ))
+            Video.objects.bulk_create(videos)
         return post
     except IntegrityError as e:
         return
@@ -185,13 +226,12 @@ def get_or_create_user_posts(**kwargs):
     scrap_code = f"{username}_posts_all"
     user = get_or_create_user(username=username)
     scraped_record, created = get_create_scraping_record(scrap_code)
-    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
-        with transaction.atomic():
-            if not created:
-                update_scraping_record(scraped_record)
-            posts = insta.get_posts(username=username)["posts"]
-            for post in posts:
-                create_post(post, user)
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*12):
+        if not created:
+            update_scraping_record(scraped_record)
+        posts = insta.get_posts(username=username)["posts"]
+        for post in posts:
+            create_post(post, user)
     if kwargs.get("only_video") == True:
         posts = user.post.filter(Q(media_type=2) | Q(is_unified_video=True))
     else:
@@ -207,17 +247,16 @@ def get_or_create_post_by_shortcode(**kwargs):
             post = Post.objects.get(shortcode=shortcode)
         except Post.DoesNotExist:
             scraped_record, created = get_create_scraping_record(scrap_code)
-            if not (created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24)):
-                return
-            if not created:
-                update_scraping_record(scraped_record)
-            try:
-                post_info = insta.get_post_info(shortcode)
-            except PostNotFound:
-                return
-            user_info = post_info.user
-            user = get_or_create_user(username=user_info.username)
-            post = create_post(post_info, user)
+            if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24):
+                if not created:
+                    update_scraping_record(scraped_record)
+                try:
+                    post_info = insta.get_post_info(shortcode)
+                except PostNotFound:
+                    return
+                user_info = post_info.user
+                user = get_or_create_user(username=user_info.username)
+                post = create_post(post_info, user)
         return post
 
 
@@ -239,65 +278,72 @@ def get_or_create_highlight(**kwargs):
     scrap_code = f"{username}_highlights_all"
     user = get_or_create_user(username=username)
     scraped_record, created = get_create_scraping_record(scrap_code)
-    with transaction.atomic():
-        if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
-            if not created:
-                update_scraping_record(scraped_record)
-            try:
-                highlights = insta.get_highlights(username=username)
-                for highlight in highlights:
-                    create_highlight(highlight, user)
-            except HighlightNotFound:
-                return
-            except PrivateAccountException:
-                return
+    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
+        if not created:
+            update_scraping_record(scraped_record)
+        try:
+            highlights = insta.get_highlights(username=username)
+            for highlight in highlights:
+                create_highlight(highlight, user)
+        except HighlightNotFound:
+            return
+        except PrivateAccountException:
+            return
     return user.highlight.all()
 
 
 def who_unfollowed(username):
+    username = getUsername(username)
     to_person = get_or_create_user(username=username)
-    scrap_code = f"{username}_who_unfollowed"
-    scraped_record, created = get_create_scraping_record(scrap_code)
-    if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*24):
-        if not created:
-            update_scraping_record(scraped_record)
-        followers = {
-            follower.username: follower for follower in insta.get_followers(username)
-        }
-        realtime_followers_usernames = set(followers.keys())
-        old_followers_usernames = set(
-            to_person.follower.values_list("username", flat=True)
-        )
-        unfollowers_usernames = old_followers_usernames.difference(
-            realtime_followers_usernames)
-        new_followers_usernames = realtime_followers_usernames.difference(
-            old_followers_usernames)
-        with transaction.atomic():
-            if new_followers_usernames:
-                UnfollowerRelation.objects.filter(
-                    to_person=to_person,
-                    from_person__username__in=new_followers_usernames
-                ).delete()
-                for follower_username in new_followers_usernames:
-                    follower = followers[follower_username]
-                    from_person, created = InstaUser.objects.get_or_create(
-                        insta_id=follower.id,
-                        username=follower.username,
-                        defaults={
-                            "full_name": follower.full_name,
-                            "profile_pic_url": follower.profile_pic_url,
-                            "is_private": follower.is_private,
-                            "is_verified": follower.is_verified,
-                        }
-                    )
-                    to_person.follower.add(from_person)
-            if unfollowers_usernames:
-                from_persons = InstaUser.objects.filter(username__in=unfollowers_usernames)\
-                    .order_by("id").values_list("id", flat=True)
-                to_person.unfollower.add(*from_persons)
-                FollowerRelation.objects.filter(
-                    to_person=to_person,
-                    from_person__username__in=unfollowers_usernames
-                ).delete()
-    unfollowers = to_person.unfollower.values()
+    if to_person.followers and to_person.followers > 2000:
+        raise F2KException(to_person.username)
+    try:
+        if to_person.is_private:  # user may later change account to private after we save it on db
+            raise PrivateAccountException
+        scrap_code = f"{username}_who_unfollowed"
+        scraped_record, created = get_create_scraping_record(scrap_code)
+        if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) >= (60*60*12):
+            if not created:
+                update_scraping_record(scraped_record)
+            followers = {
+                follower.username: follower for follower in insta.get_followers(username)
+            }
+            realtime_followers_usernames = set(followers.keys())
+            old_followers_usernames = set(
+                to_person.follower.values_list("username", flat=True)
+            )
+            unfollowers_usernames = old_followers_usernames.difference(
+                realtime_followers_usernames)
+            new_followers_usernames = realtime_followers_usernames.difference(
+                old_followers_usernames)
+            with transaction.atomic():
+                if new_followers_usernames:
+                    UnfollowerRelation.objects.filter(
+                        to_person=to_person,
+                        from_person__username__in=new_followers_usernames
+                    ).delete()
+                    for follower_username in new_followers_usernames:
+                        follower = followers[follower_username]
+                        from_person, created = InstaUser.objects.get_or_create(
+                            insta_id=follower.id,
+                            username=follower.username,
+                            defaults={
+                                "full_name": follower.full_name,
+                                "profile_pic_url": follower.profile_pic_url,
+                                "is_private": follower.is_private,
+                                "is_verified": follower.is_verified,
+                            }
+                        )
+                        to_person.follower.add(from_person)
+                if unfollowers_usernames:
+                    from_persons = InstaUser.objects.filter(username__in=unfollowers_usernames)\
+                        .order_by("id").values_list("id", flat=True)
+                    to_person.unfollower.add(*from_persons)
+                    FollowerRelation.objects.filter(
+                        to_person=to_person,
+                        from_person__username__in=unfollowers_usernames
+                    ).delete()
+        unfollowers = to_person.unfollower.values()
+    except PrivateAccountException:
+        unfollowers = []
     return to_person, unfollowers

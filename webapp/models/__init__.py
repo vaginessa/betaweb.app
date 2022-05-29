@@ -4,6 +4,9 @@ from .insta import (
     Highlight, ImageBase64,
     ScrapingRecord,
     FollowerRelation,
-    UnfollowerRelation
+    UnfollowerRelation,
+    CarouselMedia,
+    update_user,
+    update_post,
 )
 from .config import Config

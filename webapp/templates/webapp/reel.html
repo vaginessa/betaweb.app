@@ -24,6 +24,8 @@
     <div class="message">
         {% if  instauser.is_private %}
         {{instauser.username}} has private account
+        {% elif message %}
+        {{message}}
         {% else %}
         Reel Not Found
         {% endif %}

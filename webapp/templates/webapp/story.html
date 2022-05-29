@@ -50,14 +50,27 @@
                     <a target="_blank" class="download-btn" href="{{video.url}}">Download {{video.width}} x {{video.height}}</a>
                 {% endfor %}
             {% else %}
-                {% for image in post.image.all %}
-                    {% if forloop.first %}
-                        <div class="story-post">
-                            <img class="story-image" src="{{image.url|toImage}}">
-                        </div>
-                    {% endif %}
-                    <a target="_blank" class="download-btn" href="{{image.url|toImage}}" download="">Download {{image.width}} x {{image.height}}</a>
-                {% endfor %}
+                {% if not post.media_type == 8 %}
+                    {% for image in post.image.all %}
+                        {% if forloop.first %}
+                            <div class="story-post">
+                                <img class="story-image" src="{{image.url|toImage}}">
+                            </div>
+                        {% endif %}
+                        <a target="_blank" class="download-btn" href="{{image.url|toImage}}" download="">Download {{image.width}} x {{image.height}}</a>
+                    {% endfor %}
+                {% else %}
+                    {% for cm in post.cm.all %}
+                        {% for image in cm.image.all %}
+                            {% if forloop.first %}
+                                <div class="story-post">
+                                    <img class="story-image" src="{{image.url|toImage}}">
+                                </div>
+                            {% endif %}
+                            <a target="_blank" class="download-btn" href="{{image.url|toImage}}" download="">Download {{image.width}} x {{image.height}}</a>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
             {% endif %}
             <div class="timestamp" data-date="{{post.taken_at}}"></div>
         </div>
@@ -67,12 +80,8 @@
     <div class="message">
         {% if instauser.is_private %}
         {{instauser.username}} has private account
-        {% elif not stories %}
-        {% if not post %}
-        Post Not Found
-        {% else %}
-        {{instauser.username}} doesnot have any story
-        {% endif %}
+        {% elif not stories and not post %}
+            Not Found
         {% endif %}        
     </div>
 </div>

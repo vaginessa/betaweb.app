@@ -2,6 +2,7 @@ from django.views.generic import TemplateView
 from django.shortcuts import render
 from .instaPrivate.instagram import insta
 from django.db.models import Q
+from .instaPrivate.bases.exceptions import UserNotFound
 from .utils.utils import (
     get_or_create_post_by_shortcode,
     get_or_create_user,
@@ -10,7 +11,7 @@ from .utils.utils import (
     get_or_create_user_posts,
     extractInstaID,
     get_or_create_highlight,
-    who_unfollowed
+    who_unfollowed,getUsername
 )
 insta.login()
 
@@ -24,18 +25,25 @@ class DPDownloaderView(TemplateView):
 
     def post(self, request):
         username = request.POST.get("username")
-        user = get_or_create_user(username=username)
+        username = getUsername(username)
+        try:
+            user = get_or_create_user(username=username)
+        except UserNotFound:
+            return render(request,"webapp/unfollower.html")
         return render(request, "webapp/profile.html", {"instauser": user})
-
 
 class StoriesDownloaderView(TemplateView):
     template_name = "webapp/stories-downloader.html"
 
     def post(self, request):
         username = request.POST.get("username")
-        user, stories = get_or_create_story(username=username)
-        highlights = get_or_create_highlight(username=username)
-        return render(request, "webapp/story.html", {"stories": stories, "instauser": user, "highlights": highlights})
+        username = getUsername(username)
+        try:
+            user, stories = get_or_create_story(username=username)
+            highlights = get_or_create_highlight(username=username)
+        except UserNotFound:
+            return render(request,"webapp/unfollower.html")
+        return render(request,"webapp/story.html",{"stories": stories, "instauser": user, "highlights": highlights})
 
 
 class ReelDetailView(TemplateView):
@@ -59,9 +67,9 @@ class ReelsDownloaderView(TemplateView):
         if not username:
             try:
                 media_type, shortcode = extractInstaID(shortcode)
-                if media_type == "reel":
+                if media_type in ("reel","p"):
                     post = get_or_create_post_by_shortcode(shortcode=shortcode)
-                    if post:
+                    if post.is_unified_video or post.media_type == 2:
                         context = {"instauser": post.user, "reel": post}
             except TypeError as e:
                 pass
@@ -99,7 +107,10 @@ class WhoUnfollowedView(TemplateView):
 
     def post(self, request):
         username = request.POST.get("username")
-        to_person, unfollowers = who_unfollowed(username)
+        try:
+            to_person, unfollowers = who_unfollowed(username)
+        except UserNotFound:
+            return render(request,"webapp/unfollower.html")
         return render(request, 'webapp/unfollower.html', {"unfollowers": unfollowers, "instauser": to_person})
 
 

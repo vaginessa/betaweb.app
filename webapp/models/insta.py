@@ -165,10 +165,10 @@ class UnfollowerRelation(FollowUnfollowABC):
 
 
 class User(models.Model):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if ((timezone.now() - self.updated_at).total_seconds()) >= (60*60*24):
-            update_user(self)
+    # def __init__(self, *args, **kwargs):
+    #     super().__init__(*args, **kwargs)
+    #     if ((timezone.now() - self.updated_at).total_seconds()) >= (60*60*24):
+    #         update_user(self)
     follower = models.ManyToManyField(
         "self", symmetrical=False, through="FollowerRelation", related_name="follows")
     unfollower = models.ManyToManyField(
@@ -196,27 +196,6 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
-
-    # def __repr__(self):
-    #     return "User(\
-    #         insta_id='{self.insta_id}',\
-    #         username='{self.username}',\
-    #         total_posts={self.total_posts},\
-    #         full_name='{self.full_name}',\
-    #         profile_pic_url='{self.profile_pic_url}',\
-    #         profile_pic_url_hd='{self.profile_pic_url_hd}',\
-    #         external_url='{self.external_url}',\
-    #         fbid='{self.fbid}',\
-    #         biography='{self.biography}',\
-    #         followers={self.followers},\
-    #         following={self.following},\
-    #         is_business_account={self.is_business_account},\
-    #         is_professional_account={self.is_professional_account},\
-    #         category_name='{self.category_name}',\
-    #         is_private={self.is_private},\
-    #         is_verified={self.is_verified},\
-    #         connected_fb_page='{self.connected_fb_page}',\
-    #         )".format(self=self)
 
     def save(self, *args, **kwargs):
         if self.id:
@@ -255,7 +234,7 @@ class Location(models.Model):
 class Post(models.Model):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        if ((timezone.now() - self.updated_at).total_seconds()) > (60*60*8):
+        if (((timezone.now() - self.updated_at).total_seconds()) > (60*60*8)) and (self.is_unified_video or self.media_type == 2):
             update_post(self)
     user = models.ForeignKey(
         User,
@@ -333,9 +312,26 @@ class Story(models.Model):
         verbose_name_plural = "stories"
 
 
+class CarouselMedia(models.Model):
+    insta_id = models.CharField(max_length=30, db_index=True, unique=True)
+    post = models.ForeignKey(
+        Post, on_delete=models.CASCADE, related_name="cm", related_query_name="has_cm")
+    media_type = models.PositiveSmallIntegerField(default=1)
+    original_width = models.PositiveSmallIntegerField(blank=True, null=True)
+    original_height = models.PositiveSmallIntegerField(blank=True, null=True)
+
+
 class Image(BaseMedia):
     post = models.ForeignKey(
         Post,
+        on_delete=models.CASCADE,
+        related_name="image",
+        related_query_name="has_image",
+        blank=True,
+        null=True
+    )
+    cm = models.ForeignKey(
+        CarouselMedia,
         on_delete=models.CASCADE,
         related_name="image",
         related_query_name="has_image",
