@@ -2,7 +2,9 @@ from django.views.generic import TemplateView
 from django.shortcuts import render
 from .instaPrivate.instagram import insta
 from django.db.models import Q
-from .instaPrivate.bases.exceptions import UserNotFound
+from .instaPrivate.bases.exceptions import UserNotFound, F2KException
+from django.utils.decorators import method_decorator
+from .decorators import verifyGcaptcha
 from .utils.utils import (
     get_or_create_post_by_shortcode,
     get_or_create_user,
@@ -11,9 +13,8 @@ from .utils.utils import (
     get_or_create_user_posts,
     extractInstaID,
     get_or_create_highlight,
-    who_unfollowed,getUsername
+    who_unfollowed, getUsername
 )
-insta.login()
 
 
 class HomeView(TemplateView):
@@ -23,18 +24,21 @@ class HomeView(TemplateView):
 class DPDownloaderView(TemplateView):
     template_name = "webapp/dp-downloader.html"
 
+    @method_decorator(verifyGcaptcha)
     def post(self, request):
         username = request.POST.get("username")
         username = getUsername(username)
         try:
             user = get_or_create_user(username=username)
         except UserNotFound:
-            return render(request,"webapp/unfollower.html")
+            return render(request, "webapp/unfollower.html")
         return render(request, "webapp/profile.html", {"instauser": user})
+
 
 class StoriesDownloaderView(TemplateView):
     template_name = "webapp/stories-downloader.html"
 
+    @method_decorator(verifyGcaptcha)
     def post(self, request):
         username = request.POST.get("username")
         username = getUsername(username)
@@ -42,13 +46,14 @@ class StoriesDownloaderView(TemplateView):
             user, stories = get_or_create_story(username=username)
             highlights = get_or_create_highlight(username=username)
         except UserNotFound:
-            return render(request,"webapp/unfollower.html")
-        return render(request,"webapp/story.html",{"stories": stories, "instauser": user, "highlights": highlights})
+            return render(request, "webapp/unfollower.html")
+        return render(request, "webapp/story.html", {"stories": stories, "instauser": user, "highlights": highlights})
 
 
 class ReelDetailView(TemplateView):
     template_name = "webapp/reel.html"
 
+    @method_decorator(verifyGcaptcha)
     def get(self, request, **kwargs):
         post = get_or_create_post_by_shortcode(**kwargs)
         if not post:
@@ -59,6 +64,7 @@ class ReelDetailView(TemplateView):
 class ReelsDownloaderView(TemplateView):
     template_name = "webapp/reels-downloader.html"
 
+    @method_decorator(verifyGcaptcha)
     def post(self, request):
         post = request.POST
         username = post.get("username")
@@ -67,7 +73,7 @@ class ReelsDownloaderView(TemplateView):
         if not username:
             try:
                 media_type, shortcode = extractInstaID(shortcode)
-                if media_type in ("reel","p"):
+                if media_type in ("reel", "p"):
                     post = get_or_create_post_by_shortcode(shortcode=shortcode)
                     if post.is_unified_video or post.media_type == 2:
                         context = {"instauser": post.user, "reel": post}
@@ -87,6 +93,7 @@ class ReelsDownloaderView(TemplateView):
 class PhotoVideoDownloaderView(TemplateView):
     template_name = "webapp/photo-video-downloader.html"
 
+    @method_decorator(verifyGcaptcha)
     def post(self, request):
         post = request.POST
         shortcode = post.get("shortcode")
@@ -105,12 +112,15 @@ class PhotoVideoDownloaderView(TemplateView):
 class WhoUnfollowedView(TemplateView):
     template_name = "webapp/who-unfollowed.html"
 
+    @method_decorator(verifyGcaptcha)
     def post(self, request):
         username = request.POST.get("username")
         try:
             to_person, unfollowers = who_unfollowed(username)
         except UserNotFound:
-            return render(request,"webapp/unfollower.html")
+            return render(request, "webapp/unfollower.html")
+        except F2KException:
+            return render(request, "webapp/unfollower.html", {"info": f"At the moment, {request.get_host()} don't support user having over 2K followers."})
         return render(request, 'webapp/unfollower.html', {"unfollowers": unfollowers, "instauser": to_person})
 
 

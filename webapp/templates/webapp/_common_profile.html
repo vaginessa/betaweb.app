@@ -18,6 +18,7 @@
 </div>
 <form method="POST" id="tabForm">
     {% csrf_token %}
+    <input type="hidden" name="gcaptcha" value="">
     <input name="username" type="hidden" value="{{instauser.username}}">
     <div class="results-tabs-instagram">
         <a class="tab profile {% if selected == 'profile' %}selected{% endif %}" value="{% url 'app_webapp:dp_downloader_index' %}">Profile</a>

@@ -32,10 +32,11 @@
     </li>
 </ul>
 <div class="tool-section {{class}}">
-    <form method="POST" autocomplete="off">
+    <form method="POST" id="subform" autocomplete="off">
         {% csrf_token %}
         <div class="search-bar">
             <div class="tool-icon"></div>
+            <input type="hidden" name="gcaptcha" value="">
             <input class="search-input" name="{{name|default:'username'}}" placeholder="{{placeholder|default:'Username'}}" required>
             <input class="search-btn" type="submit" value=""></a>
         </div>

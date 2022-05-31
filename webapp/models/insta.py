@@ -12,14 +12,15 @@ from PIL import ImageFile
 
 def update_video(parent_instance, video_info):
     try:
-        video = parent_instance.video.get(
+        video = parent_instance.video.filter(
             height=video_info.height,
             width=video_info.width
-        )
-        video.url = video_info.url
-        video.view_count = video_info.view_count
-        video.save()
-        return video
+        ).first()
+        if video:
+            video.url = video_info.url
+            video.view_count = video_info.view_count
+            video.save()
+            return video
     except Video.DoesNotExist:
         pass
 

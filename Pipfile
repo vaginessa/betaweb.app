@@ -8,6 +8,8 @@ django = "*"
 requests = "*"
 bs4 = "*"
 pillow = "*"
+python-dotenv = "*"
+mysqlclient = "*"
 
 [dev-packages]
 

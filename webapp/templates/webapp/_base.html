@@ -5,8 +5,7 @@
 <head>
     <meta charset="utf-8">
     <title>{{title}}{% block title %}{% endblock title %}</title>
-    <meta name="description"
-        content="{% block description %}{{description}}{% endblock description %}">
+    <meta name="description" content="{% block description %}{{description}}{% endblock description %}">
     <base>
 
     <meta name="viewport" content="width=device-width, user-scalable=no">
@@ -21,6 +20,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="#FFFFFF">
     <link rel="stylesheet" href="{% static 'webapp/styles/styles.css' %}">
     <script src="{% static 'webapp/scripts/jquery.js' %}"></script>
+    <script src="https://www.google.com/recaptcha/api.js?render=6LeKlDAgAAAAAIhaze6cgUF-ZRk7SAHPYo3w8a7R"></script>
 </head>
 
 
@@ -58,8 +58,8 @@
     <!-- Content -->
     <div class="page">
         <div class="centered">
-        {% block content %} {% endblock content %} {% comment %}{% include 'webapp/_faq.html' %}{% endcomment %}
-    </div>
+            {% block content %} {% endblock content %} {% comment %}{% include 'webapp/_faq.html' %}{% endcomment %}
+        </div>
     </div>
 
 

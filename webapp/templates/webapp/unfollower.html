@@ -22,12 +22,14 @@
 {% empty %}
 <div class="user-stories message">
     <div class="message">
-        {% if not instauser %}
+        {% if info %}
+        {{info}}
+        {% elif not instauser %}
         User Not Found
         {% elif instauser.is_private %}
         {{instauser.username}} has private account
         {% else %}
-        Sorry, we currently don't have data for {{instauser.username}}. Come Back Later
+        Nobody unfollowed {{instauser.username}}. Visit {{request.get_host}} daily to keep unfollowers record UpToDate.
         {% endif %}
     </div>
 </div>
