@@ -3,7 +3,7 @@ from django.utils import timezone
 from .bases import BaseMedia
 from pathlib import Path
 from urllib.parse import urlparse
-import requests
+from ..instaPrivate.instagram import insta
 from django.conf import settings
 from base64 import b64encode
 from ..instaPrivate.instagram import insta
@@ -64,7 +64,7 @@ def update_user(instance):
 def downloadImage(url, filename):
     filepath = settings.MEDIA_ROOT/filename
     with ImageFile.Parser() as p:
-        with requests.get(url, stream=True) as r:
+        with insta.session.get(url, stream=True) as r:
             assert r.headers["content-type"].split("/")[0] == "image"
             r.raise_for_status()
             with open(filepath, "wb+") as f:

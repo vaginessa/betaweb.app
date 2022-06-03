@@ -96,7 +96,7 @@ def get_or_create_story(**kwargs):
         try:
             if not created:
                 update_scraping_record(scraped_record)
-            insta_stories = insta.get_stories(username=username).stories
+            insta_stories = insta.get_stories(user_id=user.insta_id).stories
             for insta_storie in insta_stories:
                 with transaction.atomic():
                     try:
@@ -306,7 +306,7 @@ def who_unfollowed(username):
             if not created:
                 update_scraping_record(scraped_record)
             followers = {
-                follower.username: follower for follower in insta.get_followers(username)
+                follower.username: follower for follower in insta.get_followers(user_id=to_person.insta_id)
             }
             realtime_followers_usernames = set(followers.keys())
             old_followers_usernames = set(

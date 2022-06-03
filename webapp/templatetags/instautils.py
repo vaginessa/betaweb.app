@@ -1,6 +1,6 @@
 from django import template
 from ..models import ImageBase64
-from django.conf import settings
+# from django.conf import settings
 from django.core.validators import URLValidator
 from base64 import b64encode
 validate_url = URLValidator()
@@ -17,4 +17,4 @@ def toImage(url):
         )
     except ImageBase64.DoesNotExist:
         image = ImageBase64.objects.create(url=url)
-    return settings.MEDIA_URL+str(image.image)
+    return image.image.url

@@ -2,4 +2,5 @@ from .models import Config
 
 
 def ConfigContext(request):
-    return Config.objects.values().first()
+    config = Config.objects.values().first()
+    return config or {}

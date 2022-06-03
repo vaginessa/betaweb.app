@@ -27,12 +27,12 @@ class DPDownloaderView(TemplateView):
     @method_decorator(verifyGcaptcha)
     def post(self, request):
         username = request.POST.get("username")
-        username = getUsername(username)
         try:
+            username = getUsername(username)
             user = get_or_create_user(username=username)
+            return render(request, "webapp/profile.html", {"instauser": user})
         except UserNotFound:
             return render(request, "webapp/unfollower.html")
-        return render(request, "webapp/profile.html", {"instauser": user})
 
 
 class StoriesDownloaderView(TemplateView):
