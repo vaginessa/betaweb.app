@@ -6,7 +6,6 @@ from urllib.parse import urlparse
 from ..instaPrivate.instagram import insta
 from django.conf import settings
 from base64 import b64encode
-from ..instaPrivate.instagram import insta
 from PIL import ImageFile
 
 
