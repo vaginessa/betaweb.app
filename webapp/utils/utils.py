@@ -107,16 +107,19 @@ def get_or_create_story(**kwargs):
                             expiring_at=insta_storie.expiring_at,
                             is_video=insta_storie.is_video
                         )
+                        images = []
                         for image in insta_storie.images:
-                            Image.objects.create(
+                            images.append(Image(
                                 width=image.width,
                                 height=image.height,
                                 url=image.url,
                                 story=story
-                            )
+                            ))
+                        Image.objects.bulk_create(images)
                         if insta_storie.is_video:
+                            videos = []
                             for video in insta_storie.videos:
-                                Video.objects.create(
+                                videos.append(Video(
                                     story=story,
                                     width=video.width,
                                     height=video.height,
@@ -124,7 +127,8 @@ def get_or_create_story(**kwargs):
                                     has_audio=video.has_audio,
                                     video_duration=video.video_duration,
                                     view_count=video.view_count
-                                )
+                                ))
+                            Video.objects.bulk_create(videos)
                     except IntegrityError as e:
                         # ignores unique contraint error
                         pass
