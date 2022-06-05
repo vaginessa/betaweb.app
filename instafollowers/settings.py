@@ -25,8 +25,8 @@ load_dotenv(BASE_DIR/".env")
 SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False if os.getenv("DEBUG_STATE", "true").lower() == "false" else True
-ALLOWED_HOSTS = ["localhost", ]
-
+ALLOWED_HOSTS = ["localhost", ".betaweb.app", ]
+CSRF_TRUSTED_ORIGINS = ['https://betaweb.app', 'https://www.betaweb.app']
 # Application definition
 
 INSTALLED_APPS = [
@@ -126,8 +126,6 @@ MEDIA_URL = "media/"
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if not DEBUG:
-    ALLOWED_HOSTS += ["betaweb.app", ]
-    CSRF_TRUSTED_ORIGINS = ['https://betaweb.app', 'https://www.betaweb.app']
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -135,6 +133,6 @@ if not DEBUG:
             "USER": str(os.getenv("DB_USER")),
             "PASSWORD": str(os.getenv("DB_PASSWORD")),
             "HOST": str(os.getenv("DB_HOST")),
-            "PORT": int(os.getenv("DB_PORT","5432"))
+            "PORT": int(os.getenv("DB_PORT", "5432"))
         }
     }
