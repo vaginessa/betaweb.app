@@ -1,11 +1,7 @@
-FROM archlinux
-
-RUN pacman -Suy --noconfirm
-RUN pacman -S --noconfirm python python-pip python-setuptools
+FROM python:3.10
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
-
 
 WORKDIR /code
 

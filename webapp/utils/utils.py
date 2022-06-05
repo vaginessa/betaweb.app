@@ -1,7 +1,7 @@
 from ..models import User as InstaUser, CarouselMedia, Story, \
     Image, Video, Post, Location, ScrapingRecord, Highlight, FollowerRelation, UnfollowerRelation, update_user
-from ..instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound, UserNotFound, F2KException
-from ..instaPrivate.instagram import insta
+from webapp.instaPrivate.bases.exceptions import PrivateAccountException, StoriesNotFound, PostNotFound, HighlightNotFound, UserNotFound, F2KException
+from webapp.instaPrivate.instagram import insta
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
