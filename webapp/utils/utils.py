@@ -52,9 +52,9 @@ def update_scraping_record(instance):
 
 
 def get_or_create_user(**kwargs):
-    username = kwargs["username"]
+    username = kwargs["username"].lower()
     try:
-        user = InstaUser.objects.get(username=username.lower())
+        user = InstaUser.objects.get(username=username)
         if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*24):
             update_user(user)
     except InstaUser.DoesNotExist:
