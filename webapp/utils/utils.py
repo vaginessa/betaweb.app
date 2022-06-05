@@ -41,7 +41,7 @@ def extractInstaID(url):
 
 
 def get_create_scraping_record(code):
-    return ScrapingRecord.objects.get_or_create(code=code)
+    return ScrapingRecord.objects.get_or_create(code=code.lower())
 
 
 def update_scraping_record(instance):
@@ -54,7 +54,7 @@ def update_scraping_record(instance):
 def get_or_create_user(**kwargs):
     username = kwargs["username"]
     try:
-        user = InstaUser.objects.get(username=username)
+        user = InstaUser.objects.get(username=username.lower())
         if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*24):
             update_user(user)
     except InstaUser.DoesNotExist:

@@ -173,8 +173,8 @@ class User(models.Model):
         "self", symmetrical=False, through="FollowerRelation", related_name="follows")
     unfollower = models.ManyToManyField(
         "self", symmetrical=False, through="UnfollowerRelation", related_name="unfollows")
-    insta_id = models.CharField(max_length=30, unique=True, db_index=True)
-    username = models.CharField(max_length=30, unique=True, db_index=True)
+    insta_id = models.CharField(max_length=80, unique=True, db_index=True)
+    username = models.CharField(max_length=80, unique=True, db_index=True)
     posts_count = models.PositiveIntegerField(blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)
     profile_pic_url = models.URLField(max_length=2083, blank=True, null=True)
@@ -249,7 +249,7 @@ class Post(models.Model):
         related_query_name="has_post",
         null=True, blank=True
     )
-    insta_id = models.CharField(max_length=30, db_index=True, unique=True)
+    insta_id = models.CharField(max_length=80, db_index=True, unique=True)
     shortcode = models.CharField(max_length=100, unique=True, db_index=True)
     taken_at = models.PositiveIntegerField()
     comments_count = models.PositiveIntegerField()
@@ -292,7 +292,7 @@ class Story(models.Model):
         related_name="story",
         related_query_name="has_story"
     )
-    insta_id = models.CharField(max_length=30, db_index=True, unique=True)
+    insta_id = models.CharField(max_length=80, db_index=True, unique=True)
     taken_at = models.PositiveIntegerField()
     expiring_at = models.PositiveIntegerField()
     is_video = models.BooleanField(default=False)
@@ -313,7 +313,7 @@ class Story(models.Model):
 
 
 class CarouselMedia(models.Model):
-    insta_id = models.CharField(max_length=30, db_index=True, unique=True)
+    insta_id = models.CharField(max_length=80, db_index=True, unique=True)
     post = models.ForeignKey(
         Post, on_delete=models.CASCADE, related_name="cm", related_query_name="has_cm")
     media_type = models.PositiveSmallIntegerField(default=1)
@@ -389,7 +389,7 @@ class Highlight(models.Model):
         related_name="highlight",
         related_query_name="has_highlight"
     )
-    insta_id = models.CharField(max_length=30, db_index=True, unique=True)
+    insta_id = models.CharField(max_length=80, db_index=True, unique=True)
     thumbnail_url = models.URLField(max_length=2083)
     cropped_thumbnail_url = models.URLField(max_length=2083)
     title = models.CharField(max_length=100, blank=True, null=True)
