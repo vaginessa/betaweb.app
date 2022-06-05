@@ -5,7 +5,7 @@ from django.utils import timezone
 class BaseMedia(models.Model):
     width = models.PositiveSmallIntegerField()
     height = models.PositiveSmallIntegerField()
-    url = models.URLField()
+    url = models.URLField(max_length=2083)
     created_at = models.DateTimeField(editable=False, default=timezone.now)
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
 

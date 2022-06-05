@@ -74,7 +74,7 @@ def downloadImage(url, filename):
             if p.image:
                 width, height = p.image.size
                 path = Path(settings.MEDIA_ROOT/filename)
-                filename = f"{path.stem}{width}x{height}{path.suffix}"
+                filename = f"images/{path.stem}{width}x{height}{path.suffix}"
                 path.rename(
                     settings.MEDIA_ROOT / filename
                 )
@@ -182,7 +182,7 @@ class User(models.Model):
         max_length=2083, blank=True, null=True)
     external_url = models.URLField(max_length=2083, blank=True, null=True)
     fbid = models.CharField(max_length=30, blank=True, null=True, unique=True)
-    biography = models.CharField(blank=True, null=True, max_length=200)
+    biography = models.CharField(blank=True, null=True, max_length=2000)
     followers = models.PositiveIntegerField(blank=True, null=True)
     following = models.PositiveIntegerField(blank=True, null=True)
     is_business_account = models.BooleanField(default=False)
