@@ -1,0 +1,10 @@
+version: '3.7'
+services:
+  web:
+    build: .
+    container_name: webapp
+    command: gunicorn instafollowers.wsgi -b=0.0.0.0:8005 --timeout=300 --workers=3 --threads=10
+    volumes:
+      - .:/code 
+    ports:
+      - 8005:8005
