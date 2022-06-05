@@ -9,9 +9,8 @@ requests = "*"
 bs4 = "*"
 pillow = "*"
 python-dotenv = "*"
-mysqlclient = "*"
 gunicorn = "*"
-psycopg2 = "*"
+psycopg2-binary = "*"
 
 [dev-packages]
 
