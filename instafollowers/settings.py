@@ -128,3 +128,5 @@ DATABASES = {
         "PORT": int(os.getenv("DB_PORT", "5432"))
     }
 }
+if not DEBUG:
+    PREPEND_WWW = True
