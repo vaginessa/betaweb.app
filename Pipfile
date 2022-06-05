@@ -11,6 +11,7 @@ pillow = "*"
 python-dotenv = "*"
 mysqlclient = "*"
 gunicorn = "*"
+psycopg2 = "*"
 
 [dev-packages]
 

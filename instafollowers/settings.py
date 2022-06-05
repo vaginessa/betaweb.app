@@ -23,9 +23,8 @@ load_dotenv(BASE_DIR/".env")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv("SECRET_KEY")
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False if os.getenv("DEBUG", "true").lower() == "false" else True
+DEBUG = False if os.getenv("DEBUG_STATE", "true").lower() == "false" else True
 ALLOWED_HOSTS = ["localhost", ]
 
 # Application definition
@@ -131,11 +130,11 @@ if not DEBUG:
     CSRF_TRUSTED_ORIGINS = ['https://betaweb.app', 'https://www.betaweb.app']
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.mysql',
-            'NAME': os.getenv("DB_NAME"),
-            "USER": os.getenv("DB_USER"),
-            "PASSWORD": os.getenv("DB_PASSWORD"),
-            "HOST": os.getenv("DB_HOST"),
-            "PORT": int(os.getenv("DB_PORT"))
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': str(os.getenv("DB_NAME")),
+            "USER": str(os.getenv("DB_USER")),
+            "PASSWORD": str(os.getenv("DB_PASSWORD")),
+            "HOST": str(os.getenv("DB_HOST")),
+            "PORT": int(os.getenv("DB_PORT","5432"))
         }
     }
