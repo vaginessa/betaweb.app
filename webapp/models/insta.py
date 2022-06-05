@@ -3,7 +3,7 @@ from django.utils import timezone
 from .bases import BaseMedia
 from pathlib import Path
 from urllib.parse import urlparse
-from ..instaPrivate.instagram import insta
+from webapp.instaPrivate.instagram import insta
 from django.conf import settings
 from base64 import b64encode
 from PIL import ImageFile
