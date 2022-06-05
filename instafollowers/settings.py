@@ -25,7 +25,7 @@ load_dotenv(BASE_DIR/".env")
 SECRET_KEY = os.getenv("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False if os.getenv("DEBUG_STATE", "true").lower() == "false" else True
-ALLOWED_HOSTS = ["localhost", ".betaweb.app", ]
+ALLOWED_HOSTS = [".localhost", ".betaweb.app", ]
 CSRF_TRUSTED_ORIGINS = ['https://betaweb.app', 'https://www.betaweb.app']
 # Application definition
 
