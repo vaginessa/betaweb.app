@@ -1,8 +1,8 @@
+from django.http import HttpResponse
+from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView, DetailView
 from django.shortcuts import render
-from .instaPrivate.instagram import insta
 from .models import Page
-from django.db.models import Q
 from .instaPrivate.bases.exceptions import UserNotFound, F2KException
 from django.utils.decorators import method_decorator
 from .decorators import verifyGcaptcha
@@ -129,3 +129,13 @@ class PageView(DetailView):
     template_name = 'webapp/page.html'
     model = Page
     context_object_name = "page"
+
+
+@require_GET
+def robots_txt(request):
+    lines = [
+        "User-Agent: *",
+        "Allow: /",
+        # "Sitemap: {}"
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")

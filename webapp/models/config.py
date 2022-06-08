@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.urls import reverse
 from django.utils.text import slugify
 
 
@@ -41,7 +42,8 @@ class Page(models.Model):
         self.slug = slugify(self.title)
         self.updated_at = timezone.now()
         super().save(*args, **kwargs)
-
+    def get_absolute_url(self):
+        return reverse("app_webapp:page",args=(self.slug,))
     def __str__(self):
         return self.title
 
