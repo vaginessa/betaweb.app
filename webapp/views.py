@@ -2,6 +2,7 @@ from django.http import HttpResponse
 from django.views.decorators.http import require_GET
 from django.views.generic import TemplateView, DetailView
 from django.shortcuts import render
+from django.urls import reverse
 from .models import Page
 from .instaPrivate.bases.exceptions import UserNotFound, F2KException
 from django.utils.decorators import method_decorator
@@ -136,6 +137,6 @@ def robots_txt(request):
     lines = [
         "User-Agent: *",
         "Allow: /",
-        # "Sitemap: {}"
+        f"Sitemap: {reverse('app_webapp:django.contrib.sitemaps.views.sitemap')}"
     ]
     return HttpResponse("\n".join(lines), content_type="text/plain")
