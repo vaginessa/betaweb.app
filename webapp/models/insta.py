@@ -105,8 +105,7 @@ class ImageBase64(models.Model):
         return self.filename
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         self.base64 = b64encode(self.url.encode("utf8")).decode("utf8")
         self.filename = Path(urlparse(self.url).path).resolve().name
         self.image = downloadImage(
@@ -125,8 +124,7 @@ class FollowUnfollowABC(models.Model):
     updated_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -199,8 +197,7 @@ class User(models.Model):
         return self.username
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -218,8 +215,7 @@ class Location(models.Model):
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -277,8 +273,7 @@ class Post(models.Model):
         return self.shortcode
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -301,8 +296,7 @@ class Story(models.Model):
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -398,8 +392,7 @@ class Highlight(models.Model):
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     def __str__(self):

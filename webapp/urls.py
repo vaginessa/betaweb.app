@@ -11,6 +11,6 @@ sub_urlpatterns = [
 ]
 urlpatterns = [
     path("",views.HomeView.as_view(),name="home"),
-    path("contact/",views.ContactView.as_view(),name="contact"),
-    path("instatools/",include(sub_urlpatterns),)
+    path("instatools/",include(sub_urlpatterns),),
+    path("<slug:slug>/",views.PageView.as_view(),name="page"),
 ]

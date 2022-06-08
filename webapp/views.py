@@ -1,6 +1,7 @@
-from django.views.generic import TemplateView
+from django.views.generic import TemplateView, DetailView
 from django.shortcuts import render
 from .instaPrivate.instagram import insta
+from .models import Page
 from django.db.models import Q
 from .instaPrivate.bases.exceptions import UserNotFound, F2KException
 from django.utils.decorators import method_decorator
@@ -124,5 +125,7 @@ class WhoUnfollowedView(TemplateView):
         return render(request, 'webapp/unfollower.html', {"unfollowers": unfollowers, "instauser": to_person})
 
 
-class ContactView(TemplateView):
-    template_name = 'webapp/contact.html'
+class PageView(DetailView):
+    template_name = 'webapp/page.html'
+    model = Page
+    context_object_name = "page"

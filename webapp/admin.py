@@ -7,6 +7,7 @@ from .models import (
     ScrapingRecord,
     FollowerRelation,
     UnfollowerRelation,
+    Page,
     Config,CarouselMedia
 )
 admin.site.register([
@@ -22,5 +23,6 @@ admin.site.register([
     FollowerRelation, 
     UnfollowerRelation,
     CarouselMedia,
-    Config
+    Config,
+    Page
 ])

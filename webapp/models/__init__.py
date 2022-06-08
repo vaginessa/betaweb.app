@@ -9,4 +9,4 @@ from .insta import (
     update_user,
     update_post,
 )
-from .config import Config
+from .config import Config, Page
