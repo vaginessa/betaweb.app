@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     'webapp.apps.WebappConfig',
+    'django.contrib.sitemaps',
 ]
 
 MIDDLEWARE = [

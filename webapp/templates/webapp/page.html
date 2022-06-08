@@ -2,6 +2,9 @@
 {% block content %}
 <div class="header">
     <h1 class="heading">{{page.title}}</h1>
+    {% if page.title|lower == 'privacy policy' %}
+    Effective date: {{page.updated_at|date:"jS M Y"}}
+    {% endif %}
 </div>
 
 <div class="content">
