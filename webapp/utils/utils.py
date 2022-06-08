@@ -52,7 +52,7 @@ def update_scraping_record(instance):
 
 
 def get_or_create_user(**kwargs):
-    username = kwargs["username"].lower()
+    username = kwargs["username"].lower().strip()
     try:
         user = InstaUser.objects.get(username=username)
         if ((timezone.now() - user.updated_at).total_seconds()) > (60*60*24):
@@ -64,24 +64,28 @@ def get_or_create_user(**kwargs):
             update_scraping_record(scraped_record)
         if created or ((timezone.now() - scraped_record.scraped_at).total_seconds()) > (60*60*24):
             user_info = insta.get_user_info(username)
-            user = InstaUser.objects.create(
-                insta_id=user_info.id,
-                username=user_info.username,
-                posts_count=user_info.posts,
-                full_name=user_info.full_name,
-                profile_pic_url=user_info.profile_pic_url,
-                profile_pic_url_hd=user_info.profile_pic_url_hd,
-                external_url=user_info.external_url,
-                fbid=user_info.fbid,
-                biography=user_info.biography,
-                followers=user_info.followers,
-                following=user_info.follows,
-                is_business_account=user_info.is_business_account,
-                category_name=user_info.category_name,
-                is_private=user_info.is_private,
-                is_verified=user_info.is_verified,
-                connected_fb_page=user_info.connected_fb_page
-            )
+            try:
+                user = InstaUser.objects.get(insta_id=user_info.id)
+                update_user(user,user_info)
+            except InstaUser.DoesNotExist:
+                user = InstaUser.objects.create(
+                    insta_id=user_info.id,
+                    username=user_info.username,
+                    posts_count=user_info.posts,
+                    full_name=user_info.full_name,
+                    profile_pic_url=user_info.profile_pic_url,
+                    profile_pic_url_hd=user_info.profile_pic_url_hd,
+                    external_url=user_info.external_url,
+                    fbid=user_info.fbid,
+                    biography=user_info.biography,
+                    followers=user_info.followers,
+                    following=user_info.follows,
+                    is_business_account=user_info.is_business_account,
+                    category_name=user_info.category_name,
+                    is_private=user_info.is_private,
+                    is_verified=user_info.is_verified,
+                    connected_fb_page=user_info.connected_fb_page
+                )
         else:
             raise UserNotFound
     return user

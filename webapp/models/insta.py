@@ -38,8 +38,9 @@ def update_post(instance):
     return instance
 
 
-def update_user(instance):
-    user_info = insta.get_user_info(instance.username)
+def update_user(instance,user_info=None):
+    if not user_info:
+        user_info = insta.get_user_info(instance.username)
     instance.insta_id = user_info.id
     instance.username = user_info.username
     instance.posts_count = user_info.posts
