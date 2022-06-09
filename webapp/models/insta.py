@@ -9,21 +9,6 @@ from base64 import b64encode
 from PIL import ImageFile
 
 
-def update_video(parent_instance, video_info):
-    try:
-        video = parent_instance.video.filter(
-            height=video_info.height,
-            width=video_info.width
-        ).first()
-        if video:
-            video.url = video_info.url
-            video.view_count = video_info.view_count
-            video.save()
-            return video
-    except Video.DoesNotExist:
-        pass
-
-
 def update_post(instance):
     post_info = insta.get_post_info(instance.shortcode)
     instance.comments_count = post_info.comments
@@ -31,14 +16,26 @@ def update_post(instance):
     instance.caption_is_edited = post_info.caption_is_edited
     instance.comment_likes_enabled = post_info.comment_likes_enabled
     instance.caption = post_info.caption
+    instance.updated_at = timezone.now()
     if post_info.is_unified_video or post_info.media_type == 2:
+        instance.video.delete()
+        videos = []
         for video in post_info.videos:
-            update_video(instance, video)
+            videos.append(Video(
+                post=instance,
+                width=video.width,
+                height=video.height,
+                url=video.url,
+                has_audio=video.has_audio,
+                video_duration=video.video_duration,
+                view_count=video.view_count
+            ))
+        Video.objects.bulk_create(videos)
     instance.save()
     return instance
 
 
-def update_user(instance,user_info=None):
+def update_user(instance, user_info=None):
     if not user_info:
         user_info = insta.get_user_info(instance.username)
     instance.insta_id = user_info.id

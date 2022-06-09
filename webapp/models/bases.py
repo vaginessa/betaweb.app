@@ -10,8 +10,7 @@ class BaseMedia(models.Model):
     updated_at = models.DateTimeField(editable=False, default=timezone.now)
 
     def save(self, *args, **kwargs):
-        if self.id:
-            self.updated_at = timezone.now()
+        self.updated_at = timezone.now()
         super().save(*args, **kwargs)
 
     class Meta:
