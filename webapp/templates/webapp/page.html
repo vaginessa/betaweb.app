@@ -1,5 +1,5 @@
 {% extends 'webapp/_base.html' %}
-{% block description %}{{page.description|safe}}{% endblock description %}
+{% block description %}{{page.description|striptags}}{% endblock description %}
 {% block content %}
 <div class="header">
     <h1 class="heading">{{page.title}}</h1>
