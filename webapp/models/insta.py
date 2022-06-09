@@ -18,7 +18,7 @@ def update_post(instance):
     instance.caption = post_info.caption
     instance.updated_at = timezone.now()
     if post_info.is_unified_video or post_info.media_type == 2:
-        instance.video.delete()
+        instance.video.all().delete()
         videos = []
         for video in post_info.videos:
             videos.append(Video(
