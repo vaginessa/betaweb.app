@@ -1,8 +1,11 @@
 {% extends 'webapp/_base.html' %}
 {% block title %}
-- Download Instagram DP/Profile Picture and Highlights Anonymously
+- Download Instagram DP/Profile Picture Anonymously
 {% endblock title %}
 {% block content %}
-
+<div class="header">
+    <h1 class="heading">Instagram DP/Profile Picture Downloader</h1>
+    <p class="desc">Betaweb.app allow you to download content publicly available Instagram DP/Profile Picture.</p>
+</div>
 {% include 'webapp/_tools-bar.html' with selected="dp" class='instagram-photos' %}
 {% endblock content %}

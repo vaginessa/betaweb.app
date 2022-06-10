@@ -1,8 +1,11 @@
 {% extends 'webapp/_base.html' %}
 {% block title %}
-- Download Instagram Photos/Videos/Posts Anonymously 
+- Download Instagram Photos, Videos, Posts Anonymously 
 {% endblock title %}
 {% block content %}
-
+<div class="header">
+    <h1 class="heading">Instagram Photos, Videos, Posts Downloader</h1>
+    <p class="desc">Betaweb.app allow you to download content publicly available Download Instagram Photos, Videos & Posts.</p>
+</div>
 {% include 'webapp/_tools-bar.html' with selected="videos" class='instagram-videos' name="shortcode" placeholder="Paste Video or Photo Link Here" %}
 {% endblock content %}
